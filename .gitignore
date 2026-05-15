@@ -1,0 +1,15 @@
+# Thong tin ca nhan - KHONG upload len git
+user_config.json
+config.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# ChromeDriver
+chromedriver*
+*.exe
+
+# Debug files
+debug_*.py
