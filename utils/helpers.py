@@ -81,38 +81,37 @@ def detect_item_type(item_name: str, item_type_hint: str = "") -> str:
 # ============================================================
 
 COMPLETED_SELECTORS = [
-    # Coursera dung aria-label='Completed' tren icon trong sidebar
-    (By.CSS_SELECTOR, "svg[aria-label='Completed']"),
-    (By.CSS_SELECTOR, "[aria-label='Completed']"),
-    # Hoac co class completed trong breadcrumb/header
-    (By.CSS_SELECTOR, "[data-testid='completed-icon']"),
+    # data-testid='completed-text' - xuat hien tren trang khi item done
+    (By.CSS_SELECTOR, "[data-testid='completed-text']"),
+    # H3 voi aria-label chinh xac kieu "Reading completed" / "Video completed"
+    (By.XPATH, "//h3[@aria-label='Reading completed' or @aria-label='Video completed' or @aria-label='Lecture completed']"),
+    # Selector phu: class co the thay doi nhung cau truc aria van giu
+    (By.XPATH, "//h3[contains(@aria-label,' completed')]"),
+    # Class cu cua Coursera (rc-*)
+    (By.CSS_SELECTOR, ".rc-ItemCompleted"),
     (By.CSS_SELECTOR, ".item-navigation-link--completed"),
-    (By.CSS_SELECTOR, "[class*='completed']"),
-    # Check URL trang confirm
-    (By.XPATH, "//*[contains(@aria-label,'Completed') or contains(@aria-label,'completed')]"),
 ]
 
 def is_item_completed(driver) -> bool:
-    """Kiem tra xem item hien tai da co tich xanh chua."""
-    time.sleep(2)
-    # Cach 1: Tim selector tren trang
+    """
+    Kiem tra tich xanh cua ITEM HIEN TAI dang xem.
+    Chi tra ve True khi chinh xac tim thay indicator completed tren trang.
+    KHONG check sidebar (sidebar luon co nhieu item completed khac).
+    """
+    time.sleep(1)
+
     for by, sel in COMPLETED_SELECTORS:
         try:
             elems = driver.find_elements(by, sel)
-            if elems:
+            visible = [e for e in elems if e.is_displayed()]
+            if visible:
+                info(f"  [Tick xanh] Tim thay: {sel} | text='{visible[0].text[:30]}'")
                 return True
         except Exception:
             pass
-    # Cach 2: Kiem tra noi dung page source
-    try:
-        src = driver.page_source.lower()
-        # Sau khi hoan thanh, Coursera co the hien 'well done', 'great job' etc.
-        completion_signals = ['well done', 'great job', 'you passed', 'nice work']
-        if any(sig in src for sig in completion_signals):
-            return True
-    except Exception:
-        pass
+
     return False
+
 
 # ============================================================
 #  NAVIGATION

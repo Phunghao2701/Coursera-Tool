@@ -11,15 +11,20 @@ from utils.helpers import find_optional, safe_click, is_item_completed, click_ne
 
 # ============================================================
 #  DISCUSSION HANDLER
-#  Điền "ok" vào ô reply và submit
+#  Flow đúng:
+#    1. Tìm ô Reply
+#    2. Điền text → bấm Submit/Reply
+#    3. Chờ tích xanh xuất hiện (TRƯỚC khi Next)
+#    4. Bấm "Go to next item"
 # ============================================================
 
 REPLY_BOX_SELECTORS = [
     (By.CSS_SELECTOR, "[data-testid='reply-text-area'] textarea"),
     (By.CSS_SELECTOR, "textarea[placeholder*='response' i]"),
     (By.CSS_SELECTOR, "textarea[placeholder*='reply' i]"),
+    (By.CSS_SELECTOR, "textarea[placeholder*='write' i]"),
     (By.CSS_SELECTOR, "div[contenteditable='true']"),
-    (By.CSS_SELECTOR, ".ql-editor"),               # Quill editor
+    (By.CSS_SELECTOR, ".ql-editor"),
     (By.CSS_SELECTOR, "[role='textbox']"),
     (By.XPATH, "//textarea[contains(@placeholder,'response') or contains(@placeholder,'write') or contains(@placeholder,'share')]"),
 ]
@@ -27,8 +32,8 @@ REPLY_BOX_SELECTORS = [
 SUBMIT_BTN_SELECTORS = [
     (By.CSS_SELECTOR, "[data-testid='submit-reply-btn']"),
     (By.CSS_SELECTOR, "button[data-testid*='submit']"),
+    (By.XPATH, "//button[normalize-space()='Submit' or normalize-space()='Post' or normalize-space()='Reply']"),
     (By.XPATH, "//button[contains(text(),'Submit') or contains(text(),'Post') or contains(text(),'Reply')]"),
-    (By.CSS_SELECTOR, "button.reply-submit-btn"),
     (By.CSS_SELECTOR, "button[type='submit']"),
 ]
 
@@ -36,27 +41,40 @@ SUBMIT_BTN_SELECTORS = [
 def handle_discussion(driver) -> bool:
     """
     Xử lý phần Discussion Prompt.
-    1. Tìm ô nhập text
-    2. Điền config.DISCUSSION_TEXT ("ok")
-    3. Submit
-    4. Kiểm tra tích xanh
-    Trả về True nếu hoàn thành.
+    Trả về True nếu hoàn thành (có tích xanh).
     """
     step("💬 [DISCUSSION] Bắt đầu xử lý...")
     time.sleep(3)
 
-    # ---- Kiểm tra xem đã reply chưa ----
+    # --- UU TIEN: Neu da co tich xanh roi thi skip ---
+    if is_item_completed(driver):
+        success("Da co tich xanh - bo qua Discussion nay.")
+        return True
+
+    # --- Nếu đã reply rồi, kiểm tra tích xanh luôn ---
     if _already_replied(driver):
-        info("Đã có reply trước đó — bỏ qua nhập lại.")
+        info("Đã có reply trước đó.")
         time.sleep(2)
         if is_item_completed(driver):
             success("Discussion đã hoàn thành ✔")
+            _go_next(driver)
+            return True
+        # Đã reply nhưng chưa tích → đợi thêm
+        info("Chờ thêm 5s để Coursera cập nhật...")
+        time.sleep(5)
+        if is_item_completed(driver):
+            success("Discussion đã hoàn thành ✔")
+            _go_next(driver)
             return True
 
-    # ---- Tìm ô input ----
+    # --- Cuộn xuống để tìm ô reply ---
+    _scroll_to_prompt(driver)
+
+    # --- Tìm ô nhập reply ---
     reply_box = _find_reply_box(driver)
     if not reply_box:
-        warn("Không tìm thấy ô nhập reply — thử cuộn và tìm lại.")
+        warn("Không tìm thấy ô nhập reply — thử tìm lại sau 3s...")
+        time.sleep(3)
         _scroll_to_prompt(driver)
         reply_box = _find_reply_box(driver)
 
@@ -64,31 +82,71 @@ def handle_discussion(driver) -> bool:
         error("Không tìm thấy ô nhập Discussion reply.")
         return False
 
-    # ---- Điền text ----
+    # --- Điền text ---
     _type_reply(driver, reply_box, config.DISCUSSION_TEXT)
 
-    # ---- Submit ----
+    # --- Bấm Submit/Reply ---
     submitted = _submit_reply(driver)
     if not submitted:
-        warn("Không tìm thấy nút Submit — thử Enter.")
-        reply_box.send_keys(Keys.CONTROL + Keys.RETURN)
+        warn("Không tìm thấy nút Submit — thử Ctrl+Enter...")
+        try:
+            reply_box.send_keys(Keys.CONTROL + Keys.RETURN)
+            submitted = True
+        except Exception:
+            pass
 
-    time.sleep(3)
-
-    # ---- Bấm Next ----
-    click_next_item(driver)
-    time.sleep(2)
-
-    if is_item_completed(driver):
-        success("Discussion đã hoàn thành ✔")
-        return True
-    else:
-        time.sleep(3)
-        if is_item_completed(driver):
-            success("Discussion đã hoàn thành ✔")
-            return True
-        warn("Chưa thấy tích xanh ở Discussion.")
+    if not submitted:
+        warn("Không submit được reply.")
         return False
+
+    info("Đã submit reply — chờ tích xanh...")
+
+    # --- Chờ tích xanh TRƯỚC khi Next ---
+    completed = _wait_for_completion(driver, max_wait=20)
+
+    if completed:
+        success("Discussion đã hoàn thành ✔")
+        _go_next(driver)
+        return True
+
+    # --- Retry: có thể cần submit lại ---
+    warn("Chưa thấy tích xanh — thử submit lại...")
+    for attempt in range(1, config.RETRY_LIMIT + 1):
+        info(f"  Retry {attempt}/{config.RETRY_LIMIT}...")
+
+        # Tìm lại và submit lại nếu cần
+        reply_box = _find_reply_box(driver)
+        if reply_box:
+            _type_reply(driver, reply_box, config.DISCUSSION_TEXT)
+            _submit_reply(driver)
+
+        completed = _wait_for_completion(driver, max_wait=10)
+        if completed:
+            success(f"Discussion hoàn thành ✔ (lần {attempt})")
+            _go_next(driver)
+            return True
+
+    warn("Vẫn chưa thấy tích xanh — chuyển sang item tiếp theo.")
+    _go_next(driver)
+    return False
+
+
+def _wait_for_completion(driver, max_wait: int = 20) -> bool:
+    """Đợi tích xanh xuất hiện (polling)."""
+    for _ in range(max_wait // 2):
+        time.sleep(2)
+        if is_item_completed(driver):
+            return True
+    return False
+
+
+def _go_next(driver):
+    """Bấm 'Go to next item' sau khi đã xác nhận hoàn thành."""
+    time.sleep(1)
+    clicked = click_next_item(driver)
+    if not clicked:
+        warn("Không tìm thấy nút Next ở Discussion.")
+    time.sleep(2)
 
 
 def _already_replied(driver) -> bool:
@@ -116,7 +174,7 @@ def _find_reply_box(driver):
 
 
 def _scroll_to_prompt(driver):
-    """Cuộn đến phần Discussion."""
+    """Cuộn xuống giữa trang để tìm ô reply."""
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
     time.sleep(1)
 
@@ -124,7 +182,6 @@ def _scroll_to_prompt(driver):
 def _type_reply(driver, element, text: str):
     """Điền text vào ô reply."""
     try:
-        # Clear trước
         element.clear()
     except Exception:
         try:
@@ -140,21 +197,30 @@ def _type_reply(driver, element, text: str):
         element.send_keys(text)
         info(f"Đã nhập: '{text}'")
     except Exception:
-        # Fallback: JS input
         driver.execute_script(f"arguments[0].value = '{text}';", element)
         driver.execute_script(
-            "arguments[0].dispatchEvent(new Event('input', {{ bubbles: true }}));",
+            "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));",
             element
         )
         info(f"Đã nhập (JS): '{text}'")
 
 
 def _submit_reply(driver) -> bool:
-    """Bấm nút Submit/Post."""
+    """Bấm nút Submit/Post/Reply."""
     for by, sel in SUBMIT_BTN_SELECTORS:
         btn = find_optional(driver, by, sel, timeout=5)
         if btn and btn.is_displayed() and btn.is_enabled():
-            safe_click(driver, btn)
-            info("Đã bấm Submit ✓")
-            return True
+            try:
+                driver.execute_script("arguments[0].click();", btn)
+                info("Đã bấm Submit/Reply ✓")
+                time.sleep(2)
+                return True
+            except Exception:
+                try:
+                    safe_click(driver, btn)
+                    info("Đã bấm Submit/Reply ✓")
+                    time.sleep(2)
+                    return True
+                except Exception:
+                    pass
     return False

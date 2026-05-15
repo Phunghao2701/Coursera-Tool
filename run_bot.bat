@@ -8,37 +8,33 @@ echo.
 set PYTHONUTF8=1
 cd /d "c:\Users\LENOVO\Desktop\tool coursera"
 
-:: Xac dinh lenh Python
+:: --- Tu detect Python (khong dung py_cmd.txt vi co the sai may) ---
 set PY_CMD=
 
-:: Doc tu file da luu khi setup (neu co)
-if exist py_cmd.txt (
-    set /p PY_CMD=<py_cmd.txt
-    :: Xoa khoang trang thua
-    for /f "tokens=* delims= " %%a in ("%PY_CMD%") do set PY_CMD=%%a
+python --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PY_CMD=python
+    goto :run
 )
 
-:: Neu chua co hoac file khong ton tai, tu detect
-if "%PY_CMD%"=="" (
-    py --version >nul 2>&1
-    if %errorlevel% equ 0 set PY_CMD=py
-)
-if "%PY_CMD%"=="" (
-    python --version >nul 2>&1
-    if %errorlevel% equ 0 set PY_CMD=python
-)
-if "%PY_CMD%"=="" (
-    python3 --version >nul 2>&1
-    if %errorlevel% equ 0 set PY_CMD=python3
+py --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PY_CMD=py
+    goto :run
 )
 
-if "%PY_CMD%"=="" (
-    echo LOI: Khong tim thay Python!
-    echo Hay chay setup.bat truoc.
-    pause
-    exit /b 1
+python3 --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PY_CMD=python3
+    goto :run
 )
 
+echo LOI: Khong tim thay Python!
+echo Hay chay setup.bat truoc.
+pause
+exit /b 1
+
+:run
 echo Dung lenh Python: %PY_CMD%
 echo.
 %PY_CMD% bot.py

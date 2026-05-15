@@ -346,12 +346,26 @@ class CourseraBot:
         """Xu ly mot item, thu lai neu that bai."""
         navigate_to_item(self.driver, item)
         item_type = item.get("type", "unknown")
-        ok = False
 
+        # --- UU TIEN: Check tich xanh LIVE tren trang thuc te ---
+        # Neu da co roi thi skip, khong can lam gi
+        if item_type not in ("graded", "unknown"):
+            time.sleep(2)  # Doi trang load
+            if is_item_completed(self.driver):
+                success(f"Da co tich xanh - bo qua [{item['name'][:40]}]")
+                self._update_stats(item_type, True)
+                return
+
+        ok = False
         for attempt in range(1, retry + 1):
             if attempt > 1:
                 warn(f"  Thu lai lan {attempt}/{retry}...")
                 time.sleep(3)
+                # Check lai truoc moi lan retry
+                if is_item_completed(self.driver):
+                    success(f"Da co tich xanh - dung retry.")
+                    ok = True
+                    break
 
             ok = self._dispatch(item_type)
 
