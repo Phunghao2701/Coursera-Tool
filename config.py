@@ -1,21 +1,21 @@
 # ============================================================
-#  COURSERA BOT - CẤU HÌNH
+#  COURSERA BOT - CAU HINH (tu dong tao boi launcher.py)
 # ============================================================
 
-# --- Tài khoản Coursera ---
-EMAIL    = "phunghao2701@gmail.com"
-PASSWORD = "Lephunghao2005"
+# --- Tai khoan Coursera ---
+EMAIL    = ""
+PASSWORD = ""
 
-# --- Khóa học muốn chạy ---
-COURSE_URL = "https://www.coursera.org/learn/introtoux-principles-and-processes/home/module/1"
+# --- Khoa hoc muon chay ---
+COURSE_URL = ""
 
-# --- Cài đặt bot ---
-HEADLESS        = False   # True = chạy ngầm, False = hiện browser
-VIDEO_SPEED     = 2.0     # Tốc độ video (1.0 = bình thường, 2.0 = x2)
-READING_WAIT    = 35      # Giây đợi ở trang Reading (Coursera yêu cầu 30s)
-RETRY_LIMIT     = 3       # Số lần thử lại nếu không thấy tích xanh
-DISCUSSION_TEXT = "ok"    # Nội dung reply ở Discussion Prompt
+# --- Cai dat bot ---
+HEADLESS        = False   # True = chay ngam, False = hien browser
+VIDEO_SPEED     = 2.0     # Toc do video (1.0 = binh thuong, 2.0 = x2)
+READING_WAIT    = 35      # Giay doi o trang Reading (Coursera yeu cau 30s)
+RETRY_LIMIT     = 3       # So lan thu lai neu khong thay tich xanh
+DISCUSSION_TEXT = "ok"    # Noi dung reply o Discussion Prompt
 
-# --- Timeout chung (giây) ---
+# --- Timeout chung (giay) ---
 PAGE_LOAD_TIMEOUT  = 30
 ELEMENT_TIMEOUT    = 15
