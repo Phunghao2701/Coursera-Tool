@@ -3,11 +3,11 @@
 # ============================================================
 
 # --- Tài khoản Coursera ---
-EMAIL    = "phunghao2701@gmail.com"
-PASSWORD = "Lephunghao2005"
+EMAIL    = ""
+PASSWORD = ""
 
 # --- Khóa học muốn chạy ---
-COURSE_URL = "https://www.coursera.org/learn/introtoux-principles-and-processes/home/module/1"
+COURSE_URL = ""
 
 # --- Cài đặt bot ---
 HEADLESS        = False   # True = chạy ngầm, False = hiện browser
