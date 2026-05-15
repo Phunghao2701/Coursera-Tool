@@ -81,13 +81,16 @@ def detect_item_type(item_name: str, item_type_hint: str = "") -> str:
 # ============================================================
 
 COMPLETED_SELECTORS = [
-    # data-testid='completed-text' - xuat hien tren trang khi item done
+    # [1] Trang Reading/Supplement: hien thi div/h3 rieng khi done
     (By.CSS_SELECTOR, "[data-testid='completed-text']"),
-    # H3 voi aria-label chinh xac kieu "Reading completed" / "Video completed"
-    (By.XPATH, "//h3[@aria-label='Reading completed' or @aria-label='Video completed' or @aria-label='Lecture completed']"),
-    # Selector phu: class co the thay doi nhung cau truc aria van giu
     (By.XPATH, "//h3[contains(@aria-label,' completed')]"),
-    # Class cu cua Coursera (rc-*)
+
+    # [2] Sidebar link CUA ITEM DANG XEM:
+    # aria-label = "selected link, Video, <ten>, Completed, X min"
+    # Dung cho ca Reading va Video - day la indicator chinh xac nhat
+    (By.XPATH, "//a[contains(@aria-label,'selected') and contains(@aria-label,'Completed')]"),
+
+    # [3] Class cu cua Coursera (phong truong hop)
     (By.CSS_SELECTOR, ".rc-ItemCompleted"),
     (By.CSS_SELECTOR, ".item-navigation-link--completed"),
 ]
@@ -95,8 +98,8 @@ COMPLETED_SELECTORS = [
 def is_item_completed(driver) -> bool:
     """
     Kiem tra tich xanh cua ITEM HIEN TAI dang xem.
-    Chi tra ve True khi chinh xac tim thay indicator completed tren trang.
-    KHONG check sidebar (sidebar luon co nhieu item completed khac).
+    Dung sidebar 'selected link' + 'Completed' cho Video.
+    Dung data-testid='completed-text' / h3 cho Reading.
     """
     time.sleep(1)
 
@@ -105,7 +108,7 @@ def is_item_completed(driver) -> bool:
             elems = driver.find_elements(by, sel)
             visible = [e for e in elems if e.is_displayed()]
             if visible:
-                info(f"  [Tick xanh] Tim thay: {sel} | text='{visible[0].text[:30]}'")
+                info(f"  [Tick xanh] {sel[:60]} | text='{visible[0].text[:30]}'")
                 return True
         except Exception:
             pass

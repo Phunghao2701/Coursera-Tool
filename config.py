@@ -7,7 +7,7 @@ EMAIL    = "phunghao2701@gmail.com"
 PASSWORD = "Lephunghao2005"
 
 # --- Khóa học muốn chạy ---
-COURSE_URL = "https://www.coursera.org/learn/introtoux-principles-and-processes/home/welcome"
+COURSE_URL = "https://www.coursera.org/learn/introtoux-principles-and-processes/home/module/1"
 
 # --- Cài đặt bot ---
 HEADLESS        = False   # True = chạy ngầm, False = hiện browser
