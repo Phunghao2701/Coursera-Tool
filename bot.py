@@ -102,12 +102,18 @@ class CourseraBot:
         step("Dang dang nhap vao Coursera...")
 
         self.driver.get("https://www.coursera.org/login")
-        time.sleep(6)
+        # Doi page load bang WebDriverWait thay vi sleep cung
+        try:
+            WebDriverWait(self.driver, 20).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+        except TimeoutException:
+            pass
 
         # Dong popup neu co
         self._close_popups()
 
-        # ---- Kiem tra da login san chua ----
+        # Kiem tra da login san chua
         if self._is_logged_in():
             success("Da co session - khong can dang nhap lai!")
             return
@@ -133,7 +139,6 @@ class CourseraBot:
         time.sleep(0.5)
 
         # ---- BUOC 2: Bam "Continue" ----
-        # Nut Continue xuat hien sau khi nhap email
         continue_selectors = [
             (By.XPATH, "//button[contains(text(),'Continue')]"),
             (By.XPATH, "//button[text()='Continue']"),
@@ -152,10 +157,7 @@ class CourseraBot:
             email_input.send_keys(Keys.RETURN)
             info("Da bam Enter o email field...")
 
-        time.sleep(4)  # Cho password field xuat hien
-
-        # ---- BUOC 3: Nhap password ----
-        # Coursera dung aria-label='Password'
+        # Doi password field xuat hien (WebDriverWait thay vi sleep(4))
         pass_selectors = [
             (By.CSS_SELECTOR, "input[aria-label='Password']"),
             (By.CSS_SELECTOR, "input#password"),
@@ -163,12 +165,9 @@ class CourseraBot:
             (By.CSS_SELECTOR, "input[type='password']"),
             (By.CSS_SELECTOR, "input[autocomplete='current-password']"),
         ]
-        pass_input = self._find_first(pass_selectors, timeout=15)
-        if not pass_input:
-            warn("Khong thay password field - thu them 10s...")
-            time.sleep(10)
-            pass_input = self._find_first(pass_selectors, timeout=10)
 
+        # ---- BUOC 3: Nhap password ----
+        pass_input = self._find_first(pass_selectors, timeout=15)
         if not pass_input:
             error("Khong tim thay o nhap password!")
             raise RuntimeError("Login failed: password field not found")
@@ -197,18 +196,18 @@ class CourseraBot:
             pass_input.send_keys(Keys.RETURN)
 
         info("Da bam Log in - dang cho redirect...")
-        time.sleep(10)
+        # Doi redirect sau login bang WebDriverWait thay vi sleep(10)/sleep(20)
+        try:
+            WebDriverWait(self.driver, 25).until(
+                lambda d: "/login" not in d.current_url and "authmode" not in d.current_url
+            )
+        except TimeoutException:
+            warn("Timeout cho redirect sau login.")
 
-        # ---- Kiem tra ket qua ----
         if self._is_logged_in():
             success("Dang nhap thanh cong!")
         else:
-            warn("Chua confirm duoc login - doi them 20s...")
-            time.sleep(20)
-            if self._is_logged_in():
-                success("Dang nhap thanh cong!")
-            else:
-                warn("Bot se tiep tuc nhung co the chua login.")
+            warn("Bot se tiep tuc nhung co the chua login day du.")
 
 
     def _close_popups(self):
@@ -247,16 +246,16 @@ class CourseraBot:
             except Exception:
                 pass
 
-        # Kiem tra URL: neu dang o /learn/ -> da vao khoa hoc -> da login
+        # Fallback: kiem tra URL va khong co login form trong DOM
         url = self.driver.current_url.lower()
         if "/learn/" in url and "/login" not in url and "authmode" not in url:
-            # Kiem tra them: page co content khoa hoc khong
             try:
-                src = self.driver.page_source
-                if len(src) > 10000 and "coursera" in src.lower():
-                    # Co the da login, kiem tra khong co form login
-                    if "id=\"email\"" not in src and 'name="email"' not in src:
-                        return True
+                # Dung DOM query thay vi page_source string search
+                login_form = self.driver.find_elements(
+                    By.CSS_SELECTOR, "input[type='email'], input[name='email']"
+                )
+                if not login_form:
+                    return True
             except Exception:
                 pass
 
@@ -269,7 +268,13 @@ class CourseraBot:
         """Chay bot qua toan bo khoa hoc."""
         step(f"Bat dau chay khoa hoc: {config.COURSE_URL}")
         self.driver.get(config.COURSE_URL)
-        time.sleep(4)
+        # Doi sidebar load thay vi sleep cung
+        try:
+            WebDriverWait(self.driver, 20).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+        except TimeoutException:
+            pass
 
         # Lay danh sach tat ca items
         info("Dang quet danh sach items trong khoa hoc...")

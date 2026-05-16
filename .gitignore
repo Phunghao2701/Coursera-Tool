@@ -6,10 +6,25 @@ config.py
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+
+# Debug / temp files
+debug_*.py
+test_quiz.py
+import time.txt
+*.txt
+!README.md
 
 # ChromeDriver
 chromedriver*
 *.exe
 
-# Debug files
-debug_*.py
+# Quiz answer cache (tuy chon - bo comment neu muon git theo doi)
+# quiz_answers.json
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
