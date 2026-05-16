@@ -26,12 +26,12 @@
 
 ### Bước 1 — Cài đặt thư viện
 ```
-double-click setup.bat
+setup.bat
 ```
 
 ### Bước 2 — Chạy bot
 ```
-double-click run_bot.bat
+run_bot.bat
 ```
 Điền vào form: Email, Mật khẩu, URL khóa học
 
