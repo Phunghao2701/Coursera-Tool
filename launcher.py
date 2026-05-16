@@ -65,7 +65,7 @@ class LauncherApp:
         self.root.configure(bg="#1a1a2e")
 
         # Center window
-        w, h = 520, 510
+        w, h = 520, 545
         sw = root.winfo_screenwidth()
         sh = root.winfo_screenheight()
         root.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
