@@ -16,4 +16,4 @@ TIPS: MUỐN TOOL CHẠY NGẦM THÌ MỞ FILE config.py CHỈNH HEADLESS = True
 
 ==================================================================
 
-BY @PHUNGHAO2701
+CONTRIBUTED BY @PHUNGHAO2701
