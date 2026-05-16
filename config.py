@@ -3,11 +3,11 @@
 # ============================================================
 
 # --- Tai khoan Coursera ---
-EMAIL    = "phunghao2701@gmail.com"
-PASSWORD = "Lephunghao2005"
+EMAIL    = ""
+PASSWORD = ""
 
 # --- Khoa hoc muon chay ---
-COURSE_URL = "https://www.coursera.org/learn/ux-design-concept-wireframe"
+COURSE_URL = ""
 
 # --- Cai dat bot ---
 HEADLESS        = False   # True = chay ngam, False = hien browser
