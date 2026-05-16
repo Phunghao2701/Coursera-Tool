@@ -37,17 +37,6 @@ double-click run_bot.bat
 
 ---
 
-## ⚙️ Cấu hình nâng cao (không bắt buộc)
-
-Sau khi chạy lần đầu, mở `config.py` để chỉnh:
-
-```python
-HEADLESS   = True   # Chạy ngầm (không hiện browser)
-VIDEO_SPEED = 2.0   # Tốc độ video (1.0 = bình thường)
-```
-
----
-
 ## 📁 Cấu trúc dự án
 
 ```

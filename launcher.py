@@ -27,8 +27,9 @@ def save_cfg(data: dict):
     with open(USER_CFG, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-def write_config_py(email, password, course_url):
+def write_config_py(email, password, course_url, headless=False):
     """Ghi lai config.py voi thong tin moi."""
+    headless_val = "True" if headless else "False"
     content = f"""# ============================================================
 #  COURSERA BOT - CAU HINH (tu dong tao boi launcher.py)
 # ============================================================
@@ -41,7 +42,7 @@ PASSWORD = "{password}"
 COURSE_URL = "{course_url}"
 
 # --- Cai dat bot ---
-HEADLESS        = False   # True = chay ngam, False = hien browser
+HEADLESS        = {headless_val}   # True = chay ngam, False = hien browser
 VIDEO_SPEED     = 2.0     # Toc do video (1.0 = binh thuong, 2.0 = x2)
 READING_WAIT    = 35      # Giay doi o trang Reading (Coursera yeu cau 30s)
 RETRY_LIMIT     = 3       # So lan thu lai neu khong thay tich xanh
@@ -124,6 +125,13 @@ class LauncherApp:
                        bg=PANEL, fg=LABEL, activebackground=PANEL,
                        selectcolor=ACCENT, font=("Segoe UI", 8)).pack(anchor="w", pady=(6,0))
 
+        # Headless checkbox
+        self.headless = tk.BooleanVar(value=False)
+        tk.Checkbutton(panel, text="Chạy ngầm (không hiện browser)",
+                       variable=self.headless,
+                       bg=PANEL, fg=LABEL, activebackground=PANEL,
+                       selectcolor=ACCENT, font=("Segoe UI", 8)).pack(anchor="w", pady=(2,0))
+
         # Run button
         btn_frame = tk.Frame(self.root, bg=BG, pady=6)
         btn_frame.pack(fill="x", padx=18)
@@ -162,6 +170,8 @@ class LauncherApp:
             self.password_entry.insert(0, cfg["password"])
         if cfg.get("course_url"):
             self.course_entry.insert(0, cfg["course_url"])
+        if cfg.get("headless"):
+            self.headless.set(True)
 
     def _on_run(self):
         email      = self.email_entry.get().strip()
@@ -183,10 +193,11 @@ class LauncherApp:
 
         # Luu config
         if self.remember.get():
-            save_cfg({"email": email, "password": password, "course_url": course_url})
+            save_cfg({"email": email, "password": password,
+                      "course_url": course_url, "headless": self.headless.get()})
 
         # Ghi config.py
-        write_config_py(email, password, course_url)
+        write_config_py(email, password, course_url, headless=self.headless.get())
 
         self.status_var.set("Đang khởi động bot...")
         self.run_btn.config(state="disabled", text="⏳  Đang chạy...")
