@@ -145,7 +145,7 @@ class LauncherApp:
         tk.Label(footer, textvariable=self.status_var,
                  font=("Segoe UI", 8), bg="#0d0d1a", fg="#666e99",
                  anchor="w", padx=10, pady=4).pack(side="left")
-        tk.Label(footer, text="\u00a9 2026 phunghao2701",
+        tk.Label(footer, text="\u00a9 Distributed by phunghao2701 (https://github.com/phunghao2701)",
                  font=("Segoe UI", 7), bg="#0d0d1a", fg="#4a5280",
                  anchor="e", padx=10).pack(side="right")
 

@@ -3,11 +3,11 @@
 # ============================================================
 
 # --- Tai khoan Coursera ---
-EMAIL    = ""
-PASSWORD = ""
+EMAIL    = "phunghao2701@gmail.com"
+PASSWORD = "Lephunghao2005"
 
 # --- Khoa hoc muon chay ---
-COURSE_URL = ""
+COURSE_URL = "https://www.coursera.org/learn/evaluating-designs-with-users"
 
 # --- Cai dat bot ---
 HEADLESS        = False   # True = chay ngam, False = hien browser
