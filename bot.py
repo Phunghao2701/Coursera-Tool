@@ -64,6 +64,14 @@ class CourseraBot:
 
         if config.HEADLESS:
             opts.add_argument("--headless=new")
+            # Cho phep video tu dong phat trong headless (khong can user gesture)
+            opts.add_argument("--autoplay-policy=no-user-gesture-required")
+            opts.add_argument("--disable-features=UserActivationRequiredForMediaPlayback")
+            opts.add_argument("--mute-audio")          # Tat am de Chrome khong block media
+            opts.add_argument("--use-fake-ui-for-media-stream")
+            opts.add_argument("--use-fake-device-for-media-stream")
+            opts.add_argument("--disable-gpu")         # Headless can disable-gpu tren Windows
+            opts.add_argument("--window-size=1920,1080")  # Man hinh ao lon hon
 
         # Anti-bot options
         opts.add_argument("--no-sandbox")
