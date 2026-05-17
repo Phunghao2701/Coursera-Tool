@@ -49,21 +49,27 @@ ITEM_TYPES = {
     "reading":    ["LectureItemType", "Supplement", "reading"],
     "video":      ["Lecture", "video"],
     "discussion": ["DiscussionPrompt", "discussion", "prompt"],
-    "graded":     ["GradedLti", "GradedProgramming", "exam", "quiz",
-                   "peer", "assignment", "GradedDiscussion"],
+    "quiz":       ["exam", "quiz"],
+    "graded":     ["GradedLti", "GradedProgramming", "peer", "assignment", "GradedDiscussion"],
 }
 
 def detect_item_type(item_name: str, item_type_hint: str = "") -> str:
     """
-    Trả về: 'reading' | 'video' | 'discussion' | 'graded' | 'unknown'
-    dựa trên tên & type hint từ sidebar.
+    Tra ve: 'reading' | 'video' | 'discussion' | 'quiz' | 'graded' | 'unknown'
+    dua tren ten & type hint tu sidebar.
     """
     combined = (item_name + " " + item_type_hint).lower()
 
-    graded_kw = ["graded", "peer", "assignment", "quiz", "exam", "test",
-                 "programming", "assessment"]
-    if any(k in combined for k in graded_kw):
+    # Graded/peer/assignment TRUOC (bo qua, khong lam)
+    skip_kw = ["peer", "assignment", "programming", "peer-review", "peer graded",
+               "peer-graded", "lab", "project"]
+    if any(k in combined for k in skip_kw):
         return "graded"
+
+    # Quiz/Exam/Test -> dung quiz_handler
+    quiz_kw = ["quiz", "exam", "test", "graded quiz", "practice quiz", "assessment"]
+    if any(k in combined for k in quiz_kw):
+        return "quiz"
 
     if any(k in combined for k in ["video", "lecture"]):
         return "video"

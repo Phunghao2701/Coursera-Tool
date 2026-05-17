@@ -38,6 +38,7 @@ from handlers.reading_handler    import handle_reading
 from handlers.video_handler      import handle_video
 from handlers.discussion_handler import handle_discussion
 from handlers.assignment_handler import handle_assignment
+from handlers.quiz_handler       import handle_quiz
 
 # ============================================================
 #  COURSERA BOT CLASS
@@ -50,6 +51,7 @@ class CourseraBot:
             "reading":    {"done": 0, "failed": 0},
             "video":      {"done": 0, "failed": 0},
             "discussion": {"done": 0, "failed": 0},
+            "quiz":       {"done": 0, "failed": 0},
             "graded":     {"skipped": 0},
             "unknown":    {"skipped": 0},
         }
@@ -398,7 +400,10 @@ class CourseraBot:
             return handle_video(self.driver)
         elif item_type == "discussion":
             return handle_discussion(self.driver)
+        elif item_type == "quiz":
+            return handle_quiz(self.driver)
         elif item_type == "graded":
+            # graded = peer-review / assignment - bo qua
             return handle_assignment(self.driver)
         else:
             # Unknown: thu detect lai tu trang thuc te
@@ -419,9 +424,14 @@ class CourseraBot:
 
         combined = url + " " + page_src
 
-        # Graded (uu tien cao nhat - khong lam)
+        # Quiz (exam/quiz - lam tu dong bang Groq)
+        quiz_kw = ["quiz", "exam"]
+        if any(k in combined for k in quiz_kw):
+            return "quiz"
+
+        # Graded (assignment/peer-review - bo qua)
         graded_kw = ["graded", "peer-review", "peer review", "assignment",
-                     "quiz", "exam", "programming-assignment"]
+                     "programming-assignment"]
         if any(k in combined for k in graded_kw):
             return "graded"
 
