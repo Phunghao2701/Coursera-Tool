@@ -60,8 +60,8 @@ def detect_item_type(item_name: str, item_type_hint: str = "") -> str:
     """
     combined = (item_name + " " + item_type_hint).lower()
 
-    graded_kw = ["graded", "peer", "assignment", "quiz", "exam", "test",
-                 "programming", "assessment"]
+    graded_kw = ["graded", "peer", "peers", "assignment", "quiz", "exam", "test",
+                 "programming", "assessment", "review"]
     if any(k in combined for k in graded_kw):
         return "graded"
 

@@ -7,7 +7,7 @@ EMAIL    = "phunghao2701@gmail.com"
 PASSWORD = "Lephunghao2005"
 
 # --- Khoa hoc muon chay ---
-COURSE_URL = "https://www.coursera.org/learn/ux-design-concept-wireframe/assignment-submission/OSMXC/introduction-to-the-design-process"
+COURSE_URL = "https://www.coursera.org/learn/ux-design-concept-wireframe/assignment-submission/9N9iK/ideation"
 
 # --- Cai dat bot ---
 HEADLESS        = False   # True = chay ngam, False = hien browser

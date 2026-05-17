@@ -14,7 +14,7 @@ import os, time, sys
 # Set encoding truoc khi import bat ky thu gi in ra terminal
 os.environ["PYTHONUTF8"] = "1"
 
-import time
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -419,9 +419,9 @@ class CourseraBot:
 
         combined = url + " " + page_src
 
-        # Graded (uu tien cao nhat - khong lam)
+        # Graded (uu tien cao nhat)
         graded_kw = ["graded", "peer-review", "peer review", "assignment",
-                     "quiz", "exam", "programming-assignment"]
+                     "quiz", "exam", "programming-assignment", "peer", "peers", "review"]
         if any(k in combined for k in graded_kw):
             return "graded"
 

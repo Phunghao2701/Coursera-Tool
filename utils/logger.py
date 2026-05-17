@@ -2,6 +2,13 @@
 import logging
 import sys
 
+# Ép buộc console của Windows sử dụng mã hóa UTF-8 để in tiếng Việt không bị lỗi font/crash
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 # Màu ANSI cho terminal
 COLORS = {
     "RESET":   "\033[0m",
