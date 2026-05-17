@@ -9,10 +9,19 @@ Tu dong hoan thanh cac items trong khoa hoc Coursera:
   Assignment -> bo qua
 """
 
-import os, time, sys
+import os, time, sys, random
+from enum import Enum
 
 # Set encoding truoc khi import bat ky thu gi in ra terminal
 os.environ["PYTHONUTF8"] = "1"
+
+class ItemType(str, Enum):
+    READING    = "reading"
+    VIDEO      = "video"
+    DISCUSSION = "discussion"
+    GRADED     = "graded"
+    UNKNOWN    = "unknown"
+
 
 
 from selenium import webdriver
@@ -314,7 +323,12 @@ class CourseraBot:
         """Fallback: chay tuan tu bang nut Next."""
         step("Chay che do tuan tu (khong can sidebar)...")
         self.driver.get(config.COURSE_URL)
-        time.sleep(3)
+        try:
+            WebDriverWait(self.driver, 15).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+        except TimeoutException:
+            pass
 
         # Tim nut "Start" hoac item dau tien
         start_selectors = [
@@ -324,7 +338,12 @@ class CourseraBot:
         start_btn = self._find_first(start_selectors, timeout=10)
         if start_btn:
             start_btn.click()
-            time.sleep(3)
+            try:
+                WebDriverWait(self.driver, 10).until(
+                    lambda d: d.execute_script("return document.readyState") == "complete"
+                )
+            except TimeoutException:
+                pass
 
         visited = set()
         count   = 0
@@ -345,10 +364,17 @@ class CourseraBot:
             self._process_item(item, retry=config.RETRY_LIMIT)
             count += 1
 
+            old_url = self.driver.current_url
             moved = click_next_item(self.driver)
             if not moved:
                 break
-            time.sleep(2)
+            try:
+                # Cho navigation thuc su hoac document.readyState complete de giam thoi gian cho
+                WebDriverWait(self.driver, 6).until(
+                    lambda d: d.current_url != old_url or d.execute_script("return document.readyState") == "complete"
+                )
+            except TimeoutException:
+                pass
 
         self._print_stats()
 
@@ -358,12 +384,18 @@ class CourseraBot:
     def _process_item(self, item: dict, retry: int = 3):
         """Xu ly mot item, thu lai neu that bai."""
         navigate_to_item(self.driver, item)
-        item_type = item.get("type", "unknown")
+        item_type = item.get("type", ItemType.UNKNOWN.value)
 
         # --- UU TIEN: Check tich xanh LIVE tren trang thuc te ---
         # Neu da co roi thi skip, khong can lam gi
-        if item_type not in ("graded", "unknown"):
-            time.sleep(2)  # Doi trang load
+        if item_type not in (ItemType.GRADED.value, ItemType.UNKNOWN.value):
+            try:
+                WebDriverWait(self.driver, 5).until(
+                    lambda d: d.execute_script("return document.readyState") == "complete"
+                )
+            except TimeoutException:
+                pass
+                
             if is_item_completed(self.driver):
                 success(f"Da co tich xanh - bo qua [{item['name'][:40]}]")
                 self._update_stats(item_type, True)
@@ -373,7 +405,9 @@ class CourseraBot:
         for attempt in range(1, retry + 1):
             if attempt > 1:
                 warn(f"  Thu lai lan {attempt}/{retry}...")
-                time.sleep(3)
+                # Exponential backoff voi jitter de tang tinh linh hoat va giam tre vo ich
+                wait_time = (2 ** attempt) + random.uniform(0.1, 1.0)
+                time.sleep(min(wait_time, 15))
                 # Check lai truoc moi lan retry
                 if is_item_completed(self.driver):
                     success(f"Da co tich xanh - dung retry.")
@@ -392,32 +426,32 @@ class CourseraBot:
 
     def _dispatch(self, item_type: str) -> bool:
         """Phan phoi handler theo loai item."""
-        if item_type == "reading":
+        if item_type == ItemType.READING.value:
             return handle_reading(self.driver)
-        elif item_type == "video":
+        elif item_type == ItemType.VIDEO.value:
             return handle_video(self.driver)
-        elif item_type == "discussion":
+        elif item_type == ItemType.DISCUSSION.value:
             return handle_discussion(self.driver)
-        elif item_type == "graded":
+        elif item_type == ItemType.GRADED.value:
             return handle_assignment(self.driver)
         else:
             # Unknown: thu detect lai tu trang thuc te
             detected = self._detect_current_type()
-            if detected != "unknown":
+            if detected != ItemType.UNKNOWN.value:
                 info(f"Re-detected as: {detected}")
                 return self._dispatch(detected)
             skip(f"Loai '{item_type}' khong xac dinh - bo qua.")
             return True
 
     def _detect_current_type(self) -> str:
-        """Phat hien loai item hien tai tu URL va noi dung trang."""
-        url = self.driver.current_url.lower()
+        """Phat hien loai item hien tai tu URL va noi dung trang bang JS (Tranh page_source serialize tốn thời gian)."""
         try:
-            page_src = self.driver.page_source.lower()[:3000]
+            # Dung Javascript executor lay tieu de, URL va chuoi body ngan de toi uu hoa toc do 100x
+            combined = self.driver.execute_script(
+                "return (document.title || '') + ' ' + window.location.href + ' ' + (document.body ? document.body.innerText.substring(0, 1500) : '');"
+            ).lower()
         except Exception:
-            page_src = ""
-
-        combined = url + " " + page_src
+            combined = self.driver.current_url.lower()
 
         # Graded (uu tien cao nhat)
         graded_kw = ["graded", "peer-review", "peer review", "assignment",
@@ -451,13 +485,30 @@ class CourseraBot:
     #  HELPERS
     # ----------------------------------------------------------
     def _find_first(self, selectors: list, timeout: int = 10):
+        """
+        Tim kiem selector dau tien khop tuong thich.
+        Dung WebDriverWait de cho selector dau tien trong 1 lan duy nhat de tranh tich luy thoi gian timeout cua cac selector fallback.
+        """
+        if not selectors:
+            return None
+            
+        first_by, first_sel = selectors[0]
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located((first_by, first_sel))
+            )
+        except TimeoutException:
+            pass
+            
         for by, sel in selectors:
             try:
-                el = WebDriverWait(self.driver, timeout).until(
-                    EC.presence_of_element_located((by, sel))
-                )
-                return el
-            except TimeoutException:
+                elems = self.driver.find_elements(by, sel)
+                visible_elems = [e for e in elems if e.is_displayed()]
+                if visible_elems:
+                    return visible_elems[0]
+                if elems:
+                    return elems[0]
+            except Exception:
                 pass
         return None
 

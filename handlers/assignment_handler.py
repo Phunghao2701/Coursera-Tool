@@ -244,14 +244,16 @@ def scrape_questions(driver):
     if not q_elements:
         q_elements = driver.find_elements(By.TAG_NAME, "fieldset")
 
-    if not q_elements:
-        try:
-            driver.save_screenshot("c:\\Users\\LENOVO\\Desktop\\tool coursera\\quiz_debug.png")
-            with open("c:\\Users\\LENOVO\\Desktop\\tool coursera\\quiz_debug.html", "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
-            warn("  [DEBUG] Đã lưu quiz_debug.png và quiz_debug.html để phân tích cấu trúc DOM trang thi.")
-        except Exception as e:
-            warn(f"  [DEBUG] Không thể lưu file debug: {e}")
+    # if not q_elements:
+    #     try:
+    #         debug_png = os.path.join(os.getcwd(), "quiz_debug.png")
+    #         debug_html = os.path.join(os.getcwd(), "quiz_debug.html")
+    #         driver.save_screenshot(debug_png)
+    #         with open(debug_html, "w", encoding="utf-8") as f:
+    #             f.write(driver.page_source)
+    #         warn(f"  [DEBUG] Đã lưu {debug_png} và {debug_html} để phân tích cấu trúc DOM trang thi.")
+    #     except Exception as e:
+    #         warn(f"  [DEBUG] Không thể lưu file debug: {e}")
 
     info(f"  Tìm thấy {len(q_elements)} khối câu hỏi trên giao diện.")
     
@@ -491,14 +493,14 @@ def submit_quiz(driver) -> bool:
         sig_inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text'], input:not([type]), [role='textbox']")
         for sig in sig_inputs:
             if sig.is_displayed() or len(sig_inputs) <= 2:
-                info("  Phát hiện ô chữ ký điện tử. Nhập chữ ký: 'LE PHUNG HAO'...")
+                info("  Phát hiện ô chữ ký điện tử. Nhập chữ ký: 'abc'...")
                 try:
                     sig.clear()
                     time.sleep(0.2)
-                    sig.send_keys("LE PHUNG HAO")
+                    sig.send_keys("abc")
                     time.sleep(0.5)
                 except Exception:
-                    driver.execute_script("arguments[0].value = 'LE PHUNG HAO';", sig)
+                    driver.execute_script("arguments[0].value = 'abc';", sig)
                     time.sleep(0.5)
     except Exception as e:
         warn(f"  Không thể nhập chữ ký điện tử: {e}")

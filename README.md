@@ -1,6 +1,6 @@
 # 🎓 Coursera Bot — Tự động hoàn thành khóa học
 
-> Tool tự động xử lý Video, Reading, Quiz và Graded Assignment trên Coursera.  
+> Tool tự động xử lý Video, Reading, Discussion, Peer Review và Graded Quiz trên Coursera.  
 > **By @phunghao2701(https://github.com/phunghao2701)**
 
 ---
@@ -11,9 +11,9 @@
 |---|---|---|
 | 📹 Video | ✅ | Tăng tốc x2, chờ đến cuối |
 | 📖 Reading | ✅ | Cuộn xuống, đợi 35s theo yêu cầu Coursera |
-| 📝 Graded Quiz | ⏭️ | Comming soon |
-| 💬 Discussion | ⏭️ | Comming soon |
-| 📄 Assignment | ⏭️ | Comming soon |
+| 📝 Graded Quiz | ✅ | Tự động trả lời và nộp bài |
+| 💬 Discussion | ✅ | Tự động trả lời và nộp bài |
+| 📄 Peer Review | ⏭️ | Comming soon |
 
 ---
 
