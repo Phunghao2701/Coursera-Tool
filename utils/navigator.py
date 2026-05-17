@@ -24,8 +24,7 @@ TYPE_PATTERNS = {
     "video":      ["/lecture/"],
     "reading":    ["/supplement/"],
     "discussion": ["/discussionprompt/", "/discussion-prompt/"],
-    "quiz":       ["/exam/"],  # exam = graded quiz
-    "graded":     ["/assignment-submission/", "/peer/",
+    "graded":     ["/assignment-submission/", "/exam/", "/peer/",
                    "/gradedlti/", "/programming/", "/graded-lti/"],
 }
 
@@ -149,12 +148,6 @@ def _extract_items_from_page(driver, seen_urls: set) -> list[dict]:
                 # Lay ten item
                 name = _get_name(driver, link, href)
 
-                # RE-CLASSIFY: Neu URL la graded nhung ten co 'quiz' hoac 'exam', no thuc chat la quiz!
-                if item_type == "graded":
-                    name_lower = name.lower()
-                    if "quiz" in name_lower or "exam" in name_lower:
-                        item_type = "quiz"
-
                 # Kiem tra completed (tim SVG checkmark hoac aria)
                 completed = _check_completed(driver, link)
 
@@ -237,21 +230,14 @@ def _get_name(driver, link_element, href: str) -> str:
 def _check_completed(driver, link_element) -> bool:
     """Kiem tra item da hoan thanh chua tu context cua no trong list."""
     try:
-        # 1. Kiem tra qua aria-label (day du va chinh xac nhat vi chua text 'Completed' cho screen reader)
-        aria = link_element.get_attribute("aria-label") or ""
-        if aria:
-            aria_lower = aria.lower()
-            if "completed" in aria_lower or "passed" in aria_lower or "submitted" in aria_lower:
-                return True
-
-        # 2. Lay HTML cua phan chua link (co the chua SVG checkmark hoac completed text)
+        # Lay HTML cua phan chua link (co the chua SVG checkmark)
         parent = link_element.find_element(By.XPATH, "..")
         parent_html = parent.get_attribute("outerHTML").lower()
-        if 'aria-label="completed"' in parent_html or "aria-label='completed'" in parent_html or "completed" in parent_html or "passed" in parent_html:
+        # Tich xanh: Coursera dung aria-label='Completed' tren SVG
+        if 'aria-label="completed"' in parent_html or "aria-label='completed'" in parent_html:
             return True
-        
-        # 3. Hoac class chua "completed"
-        if "completed" in (parent.get_attribute("class") or "").lower():
+        # Hoac class chua "completed"
+        if "completed" in (parent.get_attribute("class") or ""):
             return True
     except Exception:
         pass

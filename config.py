@@ -7,7 +7,7 @@ EMAIL    = "phunghao2701@gmail.com"
 PASSWORD = "Lephunghao2005"
 
 # --- Khoa hoc muon chay ---
-COURSE_URL = "https://www.coursera.org/learn/understanding-user-needs/supplement/Edq5p/welcome-announcement"
+COURSE_URL = "https://www.coursera.org/learn/ux-design-concept-wireframe/assignment-submission/OSMXC/introduction-to-the-design-process"
 
 # --- Cai dat bot ---
 HEADLESS        = False   # True = chay ngam, False = hien browser

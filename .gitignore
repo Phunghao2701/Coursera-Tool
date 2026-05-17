@@ -1,7 +1,6 @@
 # Thong tin ca nhan - KHONG upload len git
 user_config.json
 config.py
-.env
 
 # Python cache
 __pycache__/

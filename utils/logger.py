@@ -2,15 +2,6 @@
 import logging
 import sys
 
-# Force stdout/stderr to use UTF-8 on Windows to avoid UnicodeEncodeErrors with emojis
-try:
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
-except Exception:
-    pass
-
 # Màu ANSI cho terminal
 COLORS = {
     "RESET":   "\033[0m",
