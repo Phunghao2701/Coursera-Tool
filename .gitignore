@@ -16,7 +16,8 @@ test_quiz.py
 import time.txt
 *.txt
 !README.md
-
+quiz_debug.html
+quiz_debug.png
 # ChromeDriver
 chromedriver*
 *.exe
