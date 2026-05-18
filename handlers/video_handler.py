@@ -63,18 +63,31 @@ def handle_video(driver) -> bool:
     duration = _get_duration(driver, video)
     _wait_for_video_end(driver, video, duration)
 
-    # --- Bấm Next ---
-    click_next_item(driver)
-    time.sleep(3)
+    # --- Đợi tích xanh xuất hiện TRƯỚC KHI BẤM NEXT (Theo yêu cầu) ---
+    info("⏳ Đang chờ hệ thống Coursera xác nhận hoàn thành và xuất hiện tích xanh...")
+    has_tick = False
+    for attempt in range(5):
+        time.sleep(2)
+        if is_item_completed(driver):
+            has_tick = True
+            break
 
-    # --- Kiểm tra tích xanh ---
-    if is_item_completed(driver):
-        success("Video đã hoàn thành ✔")
+    if has_tick:
+        success("Video đã hoàn thành và đạt tích xanh ✔. Bấm sang bài tiếp theo.")
+        click_next_item(driver)
+        time.sleep(2)
         return True
 
-    # Chưa tích → có thể video chưa xem hết thực sự, reload và xem lại
-    warn("Chưa thấy tích xanh — thử xem lại từ đầu...")
-    return _retry_video(driver)
+    # Chưa tích → có thể video chưa xem hết thực sự, tiến hành reload và xem lại (seek/retry)
+    warn("⚠️ Vẫn chưa thấy tích xanh sau video — chạy cơ chế xem lại...")
+    retry_ok = _retry_video(driver)
+    if retry_ok:
+        info("Đã đạt tích xanh sau khi xem lại. Bấm sang bài tiếp theo.")
+        click_next_item(driver)
+        time.sleep(2)
+        return True
+        
+    return False
 
 
 def _retry_video(driver) -> bool:

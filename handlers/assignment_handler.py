@@ -50,17 +50,19 @@ def call_groq_api(prompt: str) -> dict:
             {
                 "role": "system",
                 "content": (
-                    "You are an expert academic assistant that solves Coursera quizzes perfectly. "
-                    "Analyze the provided quiz questions and choices, and return a JSON object with the answers. "
-                    "For each question, select the best possible answers based on the options provided. "
-                    "If the question type is 'single' (radio), select exactly one option. "
-                    "If the question type is 'multiple' (checkbox), select one or more correct options. "
-                    "Return ONLY a raw JSON object. Do not include markdown code block formatting (like ```json). "
-                    "The format of the JSON MUST be exactly: "
+                    "You are an expert academic assistant that solves Coursera quizzes perfectly.\n"
+                    "Analyze the provided quiz questions and choices, and return a JSON object with the answers.\n"
+                    "For each question, select the correct option indices (0-based) from the provided options list.\n"
+                    "If the question type is 'single' (radio), select exactly one option index (e.g., [0]).\n"
+                    "If the question type is 'multiple' (checkbox), select one or more correct option indices (e.g., [1, 2]).\n"
+                    "CRITICAL: The JSON response MUST only contain the 0-based indices (integers) of the selected options.\n"
+                    "Do NOT return the text of the options, only their index numbers!\n"
+                    "Return ONLY a raw JSON object. Do not include markdown code block formatting (like ```json).\n"
+                    "The format of the JSON MUST be exactly:\n"
                     "{\n"
                     "  \"answers\": {\n"
-                    "    \"1\": [\"Option Text A\"],\n"
-                    "    \"2\": [\"Option Text B\", \"Option Text C\"]\n"
+                    "    \"1\": [0],\n"
+                    "    \"2\": [1, 2]\n"
                     "  }\n"
                     "}"
                 )
@@ -357,21 +359,42 @@ def scrape_questions(driver):
 
 
 def find_best_matching_option(opt_text_from_ai, options_list):
-    """Tìm phương án khớp nhất từ kết quả AI."""
+    """Tìm phương án khớp nhất từ kết quả AI (Bản tự chữa lành - Self-healing)."""
+    if opt_text_from_ai is None:
+        return None
+        
+    # Phòng chống trường hợp AI trả về kiểu dữ liệu lạ (ví dụ: list hoặc dict lồng nhau do lỗi cú pháp JSON)
+    if isinstance(opt_text_from_ai, list):
+        opt_text_from_ai = " ".join([str(item) for item in opt_text_from_ai])
+    elif not isinstance(opt_text_from_ai, str):
+        opt_text_from_ai = str(opt_text_from_ai)
+
+    opt_text_from_ai_clean = opt_text_from_ai.strip().lower()
+
     # 1. Khớp chính xác hoàn toàn
     for opt in options_list:
-        if opt_text_from_ai.strip().lower() == opt["text"].strip().lower():
+        if not opt.get("text"):
+            continue
+        if opt_text_from_ai_clean == opt["text"].strip().lower():
             return opt
+            
     # 2. Khớp tương đối (substring)
     for opt in options_list:
-        if opt_text_from_ai.strip().lower() in opt["text"].strip().lower() or opt["text"].strip().lower() in opt_text_from_ai.strip().lower():
+        if not opt.get("text"):
+            continue
+        opt_text_clean = opt["text"].strip().lower()
+        if opt_text_from_ai_clean in opt_text_clean or opt_text_clean in opt_text_from_ai_clean:
             return opt
+            
     # 3. Khớp tương đối không phân biệt ký tự đặc biệt
-    clean_ai = re.sub(r'\W+', '', opt_text_from_ai).lower()
+    clean_ai = re.sub(r'\W+', '', opt_text_from_ai_clean)
     for opt in options_list:
+        if not opt.get("text"):
+            continue
         clean_opt = re.sub(r'\W+', '', opt["text"]).lower()
         if clean_ai == clean_opt or clean_ai in clean_opt or clean_opt in clean_ai:
             return opt
+            
     return None
 
 def select_option(driver, opt_el):
@@ -411,16 +434,33 @@ def enter_quiz(driver) -> bool:
         (By.CSS_SELECTOR, "button[data-testid*='retry-btn']"),
     ]
     
-    found_btn = None
+    found_btn_selector = None
     for by, sel in entry_selectors:
         btn = find_optional(driver, by, sel, timeout=5)
-        if btn and btn.is_displayed():
-            found_btn = btn
-            info(f"  Tìm thấy nút vào thi: '{btn.text}'")
-            break
+        if btn:
+            try:
+                if btn.is_displayed():
+                    found_btn_selector = (by, sel, btn.text)
+                    break
+            except Exception:
+                pass
             
-    if found_btn:
-        safe_click(driver, found_btn)
+    if found_btn_selector:
+        by, sel, text = found_btn_selector
+        info(f"  Tìm thấy nút vào thi: '{text}'. Tiến hành click...")
+        # Định vị lại element tại thời điểm click để chống lỗi StaleElementReferenceException
+        clicked = False
+        for attempt in range(3):
+            try:
+                btn = driver.find_element(by, sel)
+                safe_click(driver, btn)
+                clicked = True
+                break
+            except Exception as e:
+                warn(f"  Thử click nút vào thi lần {attempt+1}/3 thất bại: {e}")
+                time.sleep(1)
+        if not clicked:
+            warn("  Không thể click nút vào thi sau 3 lần thử.")
         time.sleep(2)
         
         # Kiểm tra và xử lý Honor Code Modal hoặc Start Attempt Modal nếu xuất hiện
@@ -627,18 +667,21 @@ def handle_assignment(driver) -> bool:
             error("  Không tìm thấy câu hỏi nào trên giao diện thi!")
             return False
             
-        # Chuẩn bị payload gửi Groq
+        # Chuẩn bị payload gửi Groq (Sử dụng 0-based Index để chống vỡ định dạng và chống lỗi ký tự ngoặc kép đặc biệt)
         questions_payload = []
         for q in questions:
+            opts_with_index = []
+            for i, opt in enumerate(q["options"]):
+                opts_with_index.append(f"{i}: {opt['text']}")
             questions_payload.append({
                 "id": q["id"],
                 "text": q["text"],
                 "type": q["type"],
-                "options": [opt["text"] for opt in q["options"]]
+                "options": opts_with_index
             })
             
         prompt = (
-            "Solve the following Coursera quiz questions. Return the correct answers inside a JSON object.\n"
+            "Solve the following Coursera quiz questions. Return the correct option indices (0-based integers) inside a JSON object.\n"
             f"Questions list:\n{json.dumps(questions_payload, ensure_ascii=False, indent=2)}"
         )
         
@@ -661,17 +704,44 @@ def handle_assignment(driver) -> bool:
         for q in questions:
             q_id_str = str(q["id"])
             ai_opts = answers.get(q_id_str, [])
-            if not ai_opts:
-                warn(f"    Không nhận được đáp án cho Q{q['id']}.")
-                continue
+            if not isinstance(ai_opts, list):
+                ai_opts = [ai_opts]
                 
             info(f"    Q{q['id']}: AI chọn -> {ai_opts}")
-            for opt_text in ai_opts:
-                matched_opt = find_best_matching_option(opt_text, q["options"])
+            
+            # Làm phẳng hoàn toàn danh sách đáp án để chống lỗi AI trả về mảng lồng nhau hoặc mảnh cú pháp
+            flattened_opts = []
+            def flatten_list(item):
+                if isinstance(item, list):
+                    for sub_item in item:
+                        flatten_list(sub_item)
+                elif isinstance(item, dict):
+                    for k, v in item.items():
+                        flatten_list(k)
+                        flatten_list(v)
+                else:
+                    if str(item).strip() not in (":", ",", "{", "}", "[", "]"):
+                        flattened_opts.append(item)
+            
+            flatten_list(ai_opts)
+            
+            for opt_val in flattened_opts:
+                # 1. Thử giải quyết theo phương pháp Chỉ số (Index) - An toàn và chính xác 100%
+                try:
+                    idx_int = int(opt_val)
+                    if 0 <= idx_int < len(q["options"]):
+                        matched_opt = q["options"][idx_int]
+                        select_option(driver, matched_opt["element"])
+                        continue
+                except (ValueError, TypeError):
+                    pass
+                
+                # 2. Fallback: Nếu AI trả về text thay vì chỉ số
+                matched_opt = find_best_matching_option(opt_val, q["options"])
                 if matched_opt:
                     select_option(driver, matched_opt["element"])
                 else:
-                    warn(f"      Không khớp được phương án: '{opt_text}'")
+                    warn(f"      Không khớp được phương án bằng cả chỉ số lẫn văn bản: '{opt_val}'")
                     
         # Đảm bảo mỗi câu hỏi đều có ít nhất 1 đáp án được click chọn để bật nút Submit
         for q in questions:
@@ -697,12 +767,23 @@ def handle_assignment(driver) -> bool:
             error("  Không thể nộp bài!")
             return False
             
-        # Kiểm tra điểm số
+        # ƯU TIÊN KIỂM TRA TÍCH XANH HOÀN THÀNH TRƯỚC (Theo yêu cầu)
+        time.sleep(4) # Chờ 4 giây để giao diện cập nhật trạng thái tích xanh
+        if is_item_completed(driver):
+            success("🎉 Phát hiện TÍCH XANH HOÀN THÀNH trên bài tập! Vượt qua quiz thành công (mặc dù điểm có thể chưa tới 80%)!")
+            back_btn = find_optional(driver, By.XPATH, "//button[contains(., 'Go back') or contains(., 'Quay lại') or contains(., 'Next') or contains(., 'Tiếp theo')]", timeout=8)
+            if back_btn:
+                safe_click(driver, back_btn)
+                time.sleep(3)
+            return True
+            
+        # Kiểm tra điểm số (nếu chưa thấy tích xanh trực tiếp)
         score = get_score_percentage(driver)
         info(f"🏆 Điểm đạt được trong lần thử này: {score:.2f}% (Yêu cầu: >= 80%)")
         
-        if score >= 80.0:
-            success(f"🎉 Đã VƯỢT QUA Quiz thành công với điểm số {score:.2f}%!")
+        # Nếu điểm số >= 80% hoặc bất ngờ xuất hiện tích xanh tại thời điểm này
+        if score >= 80.0 or is_item_completed(driver):
+            success(f"🎉 Đã VƯỢT QUA Quiz thành công với điểm số {score:.2f}% (hoặc đã có tích xanh)!")
             
             back_btn = find_optional(driver, By.XPATH, "//button[contains(., 'Go back') or contains(., 'Quay lại') or contains(., 'Next') or contains(., 'Tiếp theo')]", timeout=8)
             if back_btn:

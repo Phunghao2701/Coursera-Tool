@@ -24,13 +24,16 @@ def wait_for_clickable(driver, by, selector, timeout=None):
     )
 
 def safe_click(driver, element):
-    """Click an element, scrolling into view if needed."""
+    """Click an element, scrolling into view if needed. Tuyệt đối không gây crash bot."""
     try:
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
         time.sleep(0.4)
         element.click()
     except Exception:
-        driver.execute_script("arguments[0].click();", element)
+        try:
+            driver.execute_script("arguments[0].click();", element)
+        except Exception as e:
+            warn(f"      [safe_click] Không thể thực hiện click: {e}")
 
 def find_optional(driver, by, selector, timeout=5):
     """Tìm element, trả về None nếu không thấy (không raise)."""

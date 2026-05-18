@@ -3,11 +3,11 @@
 # ============================================================
 
 # --- Tai khoan Coursera ---
-EMAIL    = ""
-PASSWORD = ""
+EMAIL    = "ngthuwm.311@gmail.com"
+PASSWORD = "passworddayne@031105"
 
 # --- Khoa hoc muon chay ---
-COURSE_URL = ""
+COURSE_URL = "https://www.coursera.org/learn/social-imc"
 
 # --- Cai dat bot ---
 HEADLESS        = False   # True = chay ngam, False = hien browser
