@@ -33,7 +33,8 @@ setup.bat
 ```
 run_bot.bat
 ```
-Điền vào form: Email, Mật khẩu, URL khóa học
+Điền vào form: Email, Mật khẩu, URL khóa học đã enrolled.
+(Nếu chưa enrolled vào khóa học tool sẽ không xử lý được).
 
 ---
 
@@ -57,14 +58,5 @@ tool coursera/
     └── navigator.py
 ```
 
----
-
-## ⚠️ Lưu ý
-
-- Tool chỉ dùng cho mục đích **học tập cá nhân**.
-
----
-
 ## 🎉
-
 *© Distributed by phunghao2701 (https://github.com/phunghao2701)*
