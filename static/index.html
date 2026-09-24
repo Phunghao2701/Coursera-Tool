@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coursera Bot - Live Monitor Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Background Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="lock-icon">🔒</div>
+                <h2>Xác Thực Dashboard</h2>
+                <p>Nhập mật khẩu bảo vệ để truy cập hệ thống quản trị</p>
+            </div>
+            <form id="loginForm" class="modal-body">
+                <div class="input-group">
+                    <label for="loginPassword">Mật khẩu Dashboard</label>
+                    <input type="password" id="loginPassword" placeholder="Nhập mật khẩu của bạn..." required autofocus>
+                </div>
+                <div id="loginError" class="error-msg"></div>
+                <button type="submit" id="loginBtn" class="btn btn-primary btn-block">Đăng Nhập</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-layout" id="dashboardContent">
+        <!-- Top Navbar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-logo">⚡</div>
+                <div class="brand-text">
+                    <h1>Coursera Auto Bot</h1>
+                    <span class="brand-sub">VPS Live Monitor & Controller</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="status-indicator">
+                    <span class="status-dot" id="wsDot"></span>
+                    <span id="wsStatusText">Kết nối...</span>
+                </div>
+                <div class="bot-badge badge-idle" id="botStateBadge">
+                    <span class="pulse-dot"></span>
+                    <span id="botStateText">IDLE</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-ghost" title="Đăng xuất">Đăng xuất</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-container">
+            <!-- Course & Control Panel -->
+            <section class="card control-card">
+                <div class="card-header">
+                    <h2>🎮 Bảng Điều Khiển</h2>
+                    <span class="hint">Cấu hình URL khóa học và khởi chạy tác vụ</span>
+                </div>
+                <div class="control-form">
+                    <div class="input-field">
+                        <label for="courseUrlInput">URL Khóa Học Coursera</label>
+                        <input type="url" id="courseUrlInput" placeholder="https://www.coursera.org/learn/your-course/home/welcome">
+                    </div>
+                    <div class="action-buttons">
+                        <button id="startBtn" class="btn btn-success btn-lg">
+                            <span class="btn-icon">▶</span> Khởi Động Bot
+                        </button>
+                        <button id="stopBtn" class="btn btn-danger btn-lg" disabled>
+                            <span class="btn-icon">⏹</span> Dừng Khẩn Cấp
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats & Progress Grid -->
+            <section class="stats-grid">
+                <!-- Card 1: Tiến độ tổng -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Tiến Độ Khóa Học</span>
+                        <span class="stat-icon">📊</span>
+                    </div>
+                    <div class="stat-body">
+                        <div class="progress-info">
+                            <span class="progress-percent" id="progressPercent">0%</span>
+                            <span class="progress-count" id="progressCount">0 / 0 bài</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Bài học hiện tại -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Bài Đang Xử Lý</span>
+                        <span class="stat-icon">🎯</span>
+                    </div>
+                    <div class="stat-body">
+                        <div class="current-item-name" id="currentItemName">Chưa chạy</div>
+                        <div class="type-tag" id="currentItemType">N/A</div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Thống kê đã hoàn thành -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Đã Hoàn Thành</span>
+                        <span class="stat-icon">✅</span>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-big-number" id="totalDoneCount">0</div>
+                        <div class="stat-breakdown">
+                            <span>📖 Đọc: <b id="doneReading">0</b></span>
+                            <span>🎬 Video: <b id="doneVideo">0</b></span>
+                            <span>💬 Thảo luận: <b id="doneDiscussion">0</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Bài tập / Graded bỏ qua -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Bỏ Qua (Graded/Quiz)</span>
+                        <span class="stat-icon">⏭</span>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-big-number text-amber" id="totalSkippedCount">0</div>
+                        <div class="stat-desc">Các bài thi/quiz tự làm an toàn</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Console Log Window -->
+            <section class="card console-card">
+                <div class="console-header">
+                    <div class="console-title">
+                        <div class="terminal-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <span>Console Logs Trực Tiếp (Port 3987)</span>
+                    </div>
+                    <div class="console-tools">
+                        <button id="toggleScrollBtn" class="btn btn-sm btn-ghost active">Auto-Scroll: BẬT</button>
+                        <button id="clearLogsBtn" class="btn btn-sm btn-ghost">Xóa Log</button>
+                    </div>
+                </div>
+                <div class="console-body" id="consoleLogs">
+                    <div class="log-line text-muted">[Hệ thống] Đang kết nối tới máy chủ WebSocket...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "phase-01-web-core-api",
+    "title": "Web Core API & State Manager",
+    "status": "passing-unverified",
+    "evidence": "fast mode — server.py implemented and verified import",
+    "priority": "P1",
+    "user_visible_behavior": "API server FastAPI sẵn sàng với xác thực mật khẩu dashboard và endpoint quản lý trạng thái, phát tán WebSocket.",
+    "verification_command": "python -m pytest tests/test_server.py || uvicorn server:app --port 8000 & curl http://localhost:8000/api/status",
+    "notes": "Covers stories: P1 (Password protection, API Server)"
+  },
+  {
+    "id": "phase-02-bot-lifecycle-control",
+    "title": "Bot Lifecycle Control & Event Hooks",
+    "status": "passing-unverified",
+    "evidence": "fast mode — bot_runner and logger hooks implemented",
+    "priority": "P1",
+    "user_visible_behavior": "CourseraBot chạy trong background worker thread, phát log/tiến độ ra WebSocket queue và ngắt tức thì khi gọi emergency_stop.",
+    "verification_command": "python -c \"import bot_runner; print('bot_runner imported OK')\"",
+    "notes": "Covers stories: P1 (Start/Stop emergency control, Real-time log streaming, Progress tracking)"
+  },
+  {
+    "id": "phase-03-frontend-dashboard",
+    "title": "Frontend Web Dashboard",
+    "status": "passing-unverified",
+    "evidence": "fast mode — frontend dashboard UI and client JS implemented",
+    "priority": "P1",
+    "user_visible_behavior": "Giao diện Web trực quan hiển thị trên trình duyệt với form nhập URL, nút Start/Stop, thẻ đếm tiến độ và cửa sổ console log realtime.",
+    "verification_command": "curl -s http://localhost:8000 | grep -i 'Coursera'",
+    "notes": "Covers stories: P1 (Dashboard UI, Course URL input, Live logs, Counters), P2 (Clear log, Auto-scroll toggle)"
+  },
+  {
+    "id": "phase-04-docker-infrastructure",
+    "title": "Docker Infrastructure & Packaging",
+    "status": "passing-unverified",
+    "evidence": "fast mode — Dockerfile, docker-compose.yml with port 3987 and shm_size 2gb created",
+    "priority": "P1",
+    "user_visible_behavior": "Ứng dụng đóng gói trong Docker, khởi chạy toàn bộ hệ thống bằng docker compose up -d và lưu session Chrome qua volume.",
+    "verification_command": "docker compose config && docker compose build",
+    "notes": "Covers stories: P1 (Docker Containerization, Session persistence via Volumes)"
+  },
+  {
+    "id": "phase-05-e2e-verification",
+    "title": "E2E Verification & Documentation",
+    "status": "passing-unverified",
+    "evidence": "fast mode — README.md, deploy.sh and full documentation completed",
+    "priority": "P1",
+    "user_visible_behavior": "Hệ thống hoạt động ổn định end-to-end trên VPS dưới 600MB RAM kèm tài liệu hướng dẫn triển khai hoàn chỉnh.",
+    "verification_command": "docker stats --no-stream",
+    "notes": "Covers stories: All User Stories"
+  },
+  {
+    "id": "phase-01-settings-history-backend",
+    "title": "Settings & History Backend Services",
+    "status": "not_started",
+    "evidence": "",
+    "priority": "P1",
+    "user_visible_behavior": "Người dùng có thể lưu cài đặt tài khoản, thông số bot qua API và dữ liệu được duy trì trong file data/settings.json, data/history.json.",
+    "verification_command": "python -c \"import storage; print(storage.load_settings())\"",
+    "notes": "Covers stories: P1 (Settings Management), P2 (History Tracking)"
+  },
+  {
+    "id": "phase-02-course-scanner-selective-runner",
+    "title": "Course Scanner & Selective Learning Runner",
+    "status": "not_started",
+    "evidence": "",
+    "priority": "P1",
+    "user_visible_behavior": "Quét toàn bộ cấu trúc bài học của khóa học và hỗ trợ khởi chạy chỉ với danh sách các bài học được người dùng lựa chọn.",
+    "verification_command": "curl -X POST http://localhost:3987/api/scan -d '{\"course_url\":\"...\"}'",
+    "notes": "Covers stories: P1 (Course Syllabus Scanning, Selective Execution)"
+  },
+  {
+    "id": "phase-03-three-tab-frontend-ui",
+    "title": "Three-Tab Frontend UI & Interactive Controls",
+    "status": "not_started",
+    "evidence": "",
+    "priority": "P1",
+    "user_visible_behavior": "Giao diện SPA 3 Tab (Điều khiển, Cài đặt, Lịch sử) với bảng checklist bài học, các nút lọc nhanh và form cài đặt trực quan.",
+    "verification_command": "curl -s http://localhost:3987 | grep -i 'tab-btn'",
+    "notes": "Covers stories: P1 (Tab-based Navigation, Selective Learning UI, Settings UI), P2 (History UI)"
+  },
+  {
+    "id": "phase-04-integration-verification",
+    "title": "Integration Verification & Polish",
+    "status": "not_started",
+    "evidence": "",
+    "priority": "P1",
+    "user_visible_behavior": "Toàn bộ chu trình quét bài, chọn bài, chạy bot, lưu cấu hình và ghi nhận lịch sử hoạt động trơn tru trên môi trường Docker.",
+    "verification_command": "docker stats --no-stream",
+    "notes": "Covers stories: All User Stories"
+  }
+]

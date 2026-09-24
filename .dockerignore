@@ -1,0 +1,26 @@
+# Git & IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Python cache & artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
+
+# Windows batch files
+*.bat
+py_cmd.txt
+
+# Local data & logs
+data/
+logs/
+.env
+
+# Plans & Documentation
+plans/
+README.md

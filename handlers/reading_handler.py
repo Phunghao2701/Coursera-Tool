@@ -53,7 +53,7 @@ def handle_reading(driver) -> bool:
     # 3. Đợi timer Coursera
     wait_secs = config.READING_WAIT
     info(f"⏳ Đang đợi {wait_secs}s (Coursera timer)...")
-    _countdown(wait_secs)
+    _countdown(driver, wait_secs)
 
     # 4. Bấm "Mark as completed" (quan trọng!)
     _click_mark_as_completed(driver)
@@ -82,7 +82,7 @@ def handle_reading(driver) -> bool:
     # Vẫn chưa → thử play audio rồi đợi thêm
     warn("Thử play audio và đợi thêm 15s...")
     _play_audio_if_present(driver)
-    _countdown(15)
+    _countdown(driver, 15)
     _click_mark_as_completed(driver)
     time.sleep(2)
 
@@ -164,8 +164,13 @@ def _scroll_to_bottom(driver):
     info("Đã cuộn xuống cuối trang Reading.")
 
 
-def _countdown(secs: int):
+def _countdown(driver, secs: int):
     for remaining in range(secs, 0, -1):
+        try:
+            if not getattr(driver, "session_id", None):
+                break
+        except Exception:
+            break
         print(f"\r  [TIMER] Con {remaining:3d}s...", end="", flush=True)
         time.sleep(1)
     print()

@@ -44,15 +44,30 @@ from handlers.assignment_handler import handle_assignment
 # ============================================================
 
 class CourseraBot:
-    def __init__(self):
-        self.driver  = None
-        self.stats   = {
+    def __init__(self, course_url: str = None, on_item_change=None, on_stats_change=None):
+        self.driver = None
+        self.course_url = course_url or config.COURSE_URL
+        self.on_item_change = on_item_change
+        self.on_stats_change = on_stats_change
+        self.stop_requested = False
+        self.stats = {
             "reading":    {"done": 0, "failed": 0},
             "video":      {"done": 0, "failed": 0},
             "discussion": {"done": 0, "failed": 0},
             "graded":     {"skipped": 0},
             "unknown":    {"skipped": 0},
         }
+
+    def emergency_stop(self):
+        """Ngắt khẩn cấp bot và đóng trình duyệt lập tức."""
+        self.stop_requested = True
+        warn("Tín hiệu ngắt khẩn cấp đã được kích hoạt!")
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            self.driver = None
 
     # ----------------------------------------------------------
     #  SETUP
@@ -65,14 +80,22 @@ class CourseraBot:
         if config.HEADLESS:
             opts.add_argument("--headless=new")
 
-        # Anti-bot options
+        # Anti-bot & VPS/Docker options
         opts.add_argument("--no-sandbox")
         opts.add_argument("--disable-dev-shm-usage")
+        opts.add_argument("--disable-gpu")
+        opts.add_argument("--disk-cache-dir=/tmp/cache")
         opts.add_argument("--disable-blink-features=AutomationControlled")
         opts.add_experimental_option("excludeSwitches", ["enable-automation"])
         opts.add_experimental_option("useAutomationExtension", False)
         opts.add_argument("--window-size=1440,900")
         opts.add_argument("--start-maximized")
+
+        # Lưu session cookies qua User Data Dir nếu được cấu hình (VPS/Docker)
+        user_data_dir = os.getenv("CHROME_USER_DATA_DIR")
+        if user_data_dir:
+            opts.add_argument(f"--user-data-dir={user_data_dir}")
+            info(f"Sử dụng Chrome User Data: {user_data_dir}")
 
         # User agent thuc te
         opts.add_argument(
@@ -81,9 +104,26 @@ class CourseraBot:
             "Chrome/124.0.0.0 Safari/537.36"
         )
 
-        if USE_WDM:
-            service = Service(ChromeDriverManager().install())
+        # Phát hiện Chromium binary trên Linux / Docker
+        if sys.platform.startswith("linux"):
+            for bin_path in ["/usr/bin/chromium", "/usr/bin/chromium-browser"]:
+                if os.path.exists(bin_path):
+                    opts.binary_location = bin_path
+                    info(f"Sử dụng Chromium binary: {bin_path}")
+                    break
+
+        # Khởi tạo driver tương thích Docker Linux / Windows
+        if sys.platform.startswith("linux") and os.path.exists("/usr/bin/chromedriver"):
+            service = Service("/usr/bin/chromedriver")
             self.driver = webdriver.Chrome(service=service, options=opts)
+            info("Sử dụng Chromedriver hệ thống (/usr/bin/chromedriver)")
+        elif USE_WDM:
+            try:
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=opts)
+            except Exception as e:
+                warn(f"WDM thất bại, dùng Chrome mặc định: {e}")
+                self.driver = webdriver.Chrome(options=opts)
         else:
             self.driver = webdriver.Chrome(options=opts)
 
@@ -267,9 +307,13 @@ class CourseraBot:
     # ----------------------------------------------------------
     def run(self):
         """Chay bot qua toan bo khoa hoc."""
-        step(f"Bat dau chay khoa hoc: {config.COURSE_URL}")
-        self.driver.get(config.COURSE_URL)
+        target_url = self.course_url or config.COURSE_URL
+        step(f"Bat dau chay khoa hoc: {target_url}")
+        self.driver.get(target_url)
         time.sleep(4)
+
+        if self.stop_requested:
+            return
 
         # Lay danh sach tat ca items
         info("Dang quet danh sach items trong khoa hoc...")
@@ -285,6 +329,16 @@ class CourseraBot:
 
         # Xu ly tung item
         for idx, item in enumerate(items, 1):
+            if self.stop_requested:
+                warn("Phát hiện yêu cầu dừng - dừng lại tại item hiện tại.")
+                break
+
+            if self.on_item_change:
+                try:
+                    self.on_item_change(idx, len(items), item['name'], item['type'])
+                except Exception:
+                    pass
+
             log.info("\n" + "="*60)
             log.info(f"[{idx}/{len(items)}] {item['name']} | Type: {item['type']}")
             log.info(f"   URL: {item['url']}")
@@ -295,12 +349,19 @@ class CourseraBot:
 
             self._process_item(item, retry=config.RETRY_LIMIT)
 
+            if self.on_stats_change:
+                try:
+                    self.on_stats_change(self.stats)
+                except Exception:
+                    pass
+
         self._print_stats()
 
     def _run_sequential(self):
         """Fallback: chay tuan tu bang nut Next."""
         step("Chay che do tuan tu (khong can sidebar)...")
-        self.driver.get(config.COURSE_URL)
+        target_url = self.course_url or config.COURSE_URL
+        self.driver.get(target_url)
         time.sleep(3)
 
         # Tim nut "Start" hoac item dau tien
@@ -316,7 +377,7 @@ class CourseraBot:
         visited = set()
         count   = 0
 
-        while count < 300:
+        while count < 300 and not self.stop_requested:
             url = get_current_url(self.driver)
             if url in visited:
                 break
@@ -326,11 +387,26 @@ class CourseraBot:
             item_type = self._detect_current_type()
             item = {"name": f"Item {count+1}", "url": url, "type": item_type}
 
+            if self.on_item_change:
+                try:
+                    self.on_item_change(count + 1, 0, item['name'], item_type)
+                except Exception:
+                    pass
+
             log.info("\n" + "="*60)
             log.info(f"[{count+1}] Type: {item_type} | URL: {url}")
 
             self._process_item(item, retry=config.RETRY_LIMIT)
             count += 1
+
+            if self.on_stats_change:
+                try:
+                    self.on_stats_change(self.stats)
+                except Exception:
+                    pass
+
+            if self.stop_requested:
+                break
 
             moved = click_next_item(self.driver)
             if not moved:
@@ -344,6 +420,9 @@ class CourseraBot:
     # ----------------------------------------------------------
     def _process_item(self, item: dict, retry: int = 3):
         """Xu ly mot item, thu lai neu that bai."""
+        if self.stop_requested:
+            return
+
         navigate_to_item(self.driver, item)
         item_type = item.get("type", "unknown")
         ok = False
@@ -476,6 +555,14 @@ def main():
     print("\n" + "="*60)
     print("   [BOT] COURSERA BOT  |  Tu dong hoan thanh khoa hoc")
     print("="*60 + "\n")
+
+    # Kiem tra cau hinh bien moi truong
+    cfg_errors = config.validate_config()
+    if cfg_errors:
+        for err in cfg_errors:
+            error(f"- {err}")
+        print("\n[!] Vui long kiem tra lai thong tin trong file .env")
+        return
 
     bot = CourseraBot()
     try:

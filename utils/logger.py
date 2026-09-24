@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
+from datetime import datetime
 
 # Màu ANSI cho terminal
 COLORS = {
@@ -32,16 +33,58 @@ class ColorFormatter(logging.Formatter):
         return super().format(record)
 
 
+# Danh sách callback cho WebSocket hoặc các subscriber khác
+_LOG_LISTENERS = []
+
+
+class BroadcastHandler(logging.Handler):
+    """Handler chuyển tiếp log tới các listener (WebSocket, GUI...)."""
+
+    def emit(self, record):
+        try:
+            now_str = datetime.now().strftime("%H:%M:%S")
+            # Tạo message sạch không ANSI cho web hoặc giữ ANSI nếu terminal giả lập
+            raw_msg = record.getMessage()
+            # Lấy levelname nguyên bản
+            level_name = record.levelname.replace("[", "").replace("]", "")
+            line = f"[{now_str}] [{level_name}] {raw_msg}"
+            for cb in _LOG_LISTENERS:
+                try:
+                    cb(line)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+def add_log_listener(callback):
+    """Đăng ký hàm nhận log (ví dụ: ws_manager.broadcast_log_sync)."""
+    if callback not in _LOG_LISTENERS:
+        _LOG_LISTENERS.append(callback)
+
+
+def remove_log_listener(callback):
+    if callback in _LOG_LISTENERS:
+        _LOG_LISTENERS.remove(callback)
+
+
 def get_logger(name: str = "CourseraBot") -> logging.Logger:
     logger = logging.getLogger(name)
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
+        
+        # 1. Console stream handler
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(ColorFormatter(
             fmt="%(asctime)s %(levelname)s %(message)s",
             datefmt="%H:%M:%S"
         ))
         logger.addHandler(handler)
+
+        # 2. Broadcast handler cho Web
+        bcast_handler = BroadcastHandler()
+        logger.addHandler(bcast_handler)
+
     return logger
 
 
