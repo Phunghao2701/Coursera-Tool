@@ -52,8 +52,8 @@
   {
     "id": "phase-01-settings-history-backend",
     "title": "Settings & History Backend Services",
-    "status": "not_started",
-    "evidence": "",
+    "status": "passing-unverified",
+    "evidence": "fast mode — storage.py and settings/history APIs implemented",
     "priority": "P1",
     "user_visible_behavior": "Người dùng có thể lưu cài đặt tài khoản, thông số bot qua API và dữ liệu được duy trì trong file data/settings.json, data/history.json.",
     "verification_command": "python -c \"import storage; print(storage.load_settings())\"",

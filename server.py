@@ -31,6 +31,8 @@ app = FastAPI(title="Coursera Bot Dashboard", version="1.0.0")
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+import storage
+
 # ============================================================
 #  AUTHENTICATION & SESSION MANAGEMENT
 # ============================================================
@@ -41,6 +43,17 @@ _VALID_TOKENS: Set[str] = set()
 
 class LoginRequest(BaseModel):
     password: str
+
+
+class SettingsUpdateRequest(BaseModel):
+    email: Optional[str] = None
+    password: Optional[str] = None
+    course_url: Optional[str] = None
+    video_speed: Optional[float] = None
+    reading_wait: Optional[int] = None
+    retry_limit: Optional[int] = None
+    discussion_text: Optional[str] = None
+    dashboard_password: Optional[str] = None
 
 
 def get_current_token(request: Request) -> Optional[str]:
@@ -254,9 +267,8 @@ async def serve_index():
 
 @app.post("/api/login")
 async def login(req: LoginRequest, response: Response):
-    configured_pwd = config.DASHBOARD_PASSWORD
-    if not configured_pwd:
-        configured_pwd = "coursera123"
+    s = storage.load_settings()
+    configured_pwd = s.get("dashboard_password") or config.DASHBOARD_PASSWORD or "coursera123"
 
     if req.password == configured_pwd:
         token = secrets.token_hex(24)
@@ -287,8 +299,58 @@ async def get_status(token: str = Depends(require_auth)):
     return state_manager.get_dict()
 
 
+# ============================================================
+#  SETTINGS & HISTORY APIS
+# ============================================================
+
+@app.get("/api/settings")
+async def get_settings(token: str = Depends(require_auth)):
+    s = storage.load_settings()
+    return {
+        "email": s.get("email", ""),
+        "password_masked": "******" if s.get("password") else "",
+        "course_url": s.get("course_url", ""),
+        "video_speed": s.get("video_speed", 2.0),
+        "reading_wait": s.get("reading_wait", 35),
+        "retry_limit": s.get("retry_limit", 3),
+        "discussion_text": s.get("discussion_text", "ok"),
+        "dashboard_password_masked": "******" if s.get("dashboard_password") else "",
+    }
+
+
+@app.post("/api/settings")
+async def update_settings(req: SettingsUpdateRequest, token: str = Depends(require_auth)):
+    update_data = {}
+    if req.email is not None and req.email.strip():
+        update_data["email"] = req.email.strip()
+    if req.password is not None and req.password != "******" and req.password.strip():
+        update_data["password"] = req.password.strip()
+    if req.course_url is not None and req.course_url.strip():
+        update_data["course_url"] = req.course_url.strip()
+    if req.video_speed is not None and req.video_speed > 0:
+        update_data["video_speed"] = req.video_speed
+    if req.reading_wait is not None and req.reading_wait >= 0:
+        update_data["reading_wait"] = req.reading_wait
+    if req.retry_limit is not None and req.retry_limit >= 0:
+        update_data["retry_limit"] = req.retry_limit
+    if req.discussion_text is not None:
+        update_data["discussion_text"] = req.discussion_text
+    if req.dashboard_password is not None and req.dashboard_password != "******" and req.dashboard_password.strip():
+        update_data["dashboard_password"] = req.dashboard_password.strip()
+
+    storage.save_settings(update_data)
+    return {"success": True, "message": "Đã lưu cấu hình thành công!"}
+
+
+@app.get("/api/history")
+async def get_history(token: str = Depends(require_auth)):
+    return storage.load_history()
+
+
 class StartRequest(BaseModel):
     course_url: Optional[str] = None
+    selected_urls: Optional[List[str]] = None
+
 
 
 @app.post("/api/start")

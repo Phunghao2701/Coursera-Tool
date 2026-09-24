@@ -2,15 +2,17 @@
 """
 COURSERA BOT - BOT RUNNER
 =========================
-Điều phối vòng đời của bot (start, stop khẩn cấp, cập nhật trạng thái nền).
+Điều phối vòng đời của bot (start, stop khẩn cấp, cập nhật trạng thái nền, ghi nhận lịch sử).
 Chạy trên background thread để không block Web Server FastAPI.
 """
 
 import threading
 import time
-from typing import Optional
+from datetime import datetime
+from typing import Optional, List
 
 from bot import CourseraBot
+import storage
 from utils.logger import log, info, warn, error, success, add_log_listener
 
 _runner_lock = threading.Lock()
@@ -25,8 +27,8 @@ def is_running() -> bool:
     return _bot_thread is not None and _bot_thread.is_alive()
 
 
-def start(course_url: str, state_mgr, ws_mgr) -> bool:
-    """Khởi động luồng chạy bot mới."""
+def start(course_url: str, state_mgr, ws_mgr, selected_urls: Optional[List[str]] = None) -> bool:
+    """Khởi động luồng chạy bot mới kèm danh sách bài chọn lọc (nếu có)."""
     global _current_bot, _bot_thread, _log_listener_registered
 
     with _runner_lock:
@@ -42,6 +44,8 @@ def start(course_url: str, state_mgr, ws_mgr) -> bool:
         state_mgr.reset_for_run(course_url)
         ws_mgr.broadcast_status_sync()
 
+        start_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         def _on_item_change(idx: int, total: int, name: str, item_type: str):
             state_mgr.update_item(idx, total, name, item_type)
             ws_mgr.broadcast_status_sync()
@@ -55,8 +59,12 @@ def start(course_url: str, state_mgr, ws_mgr) -> bool:
             err_msg = None
             try:
                 info(f"Khởi động phiên chạy bot cho khóa học: {course_url}")
+                if selected_urls:
+                    info(f"Chế độ học chọn lọc: {len(selected_urls)} bài được chọn.")
+
                 _current_bot = CourseraBot(
                     course_url=course_url,
+                    selected_urls=selected_urls,
                     on_item_change=_on_item_change,
                     on_stats_change=_on_stats_change
                 )
@@ -89,7 +97,27 @@ def start(course_url: str, state_mgr, ws_mgr) -> bool:
                         pass
                 state_mgr.set_idle(error_msg=err_msg)
                 ws_mgr.broadcast_status_sync()
-                info("Bot thread đã kết thúc an toàn.")
+
+                # Ghi nhận lịch sử phiên chạy
+                total_done = (
+                    state_mgr.stats["reading"]["done"]
+                    + state_mgr.stats["video"]["done"]
+                    + state_mgr.stats["discussion"]["done"]
+                )
+                is_stopped = bool(_current_bot and _current_bot.stop_requested)
+                status_label = "Hoàn thành" if not is_stopped and not err_msg else ("Đã dừng" if is_stopped else "Lỗi")
+                storage.append_history({
+                    "id": int(time.time()),
+                    "course_url": course_url,
+                    "started_at": start_time_str,
+                    "finished_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "status": status_label,
+                    "total_items": state_mgr.total_items,
+                    "completed_items": total_done,
+                    "stats": state_mgr.stats
+                })
+
+                info("Bot thread đã kết thúc an toàn và lưu lịch sử.")
 
         _bot_thread = threading.Thread(target=_worker, name="CourseraBotWorker", daemon=True)
         _bot_thread.start()
@@ -104,5 +132,3 @@ def emergency_stop():
         if _current_bot:
             warn("Gửi tín hiệu emergency stop tới CourseraBot...")
             _current_bot.emergency_stop()
-
-        # Không block lâu, thread worker sẽ dọn dẹp và kết thúc
