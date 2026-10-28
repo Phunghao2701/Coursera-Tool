@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coursera Tools — Settings</title>
+    <link rel="stylesheet" href="ui/settings.css" />
+  </head>
+
+  <body>
+    <main class="container">
+      <header class="settings-header">
+        <img class="settings-logo" src="assets/coursera-tools-logo.png" alt="" />
+        <div class="settings-heading">
+          <h1>Coursera Tools</h1>
+          <p>Settings for your course tools</p>
+        </div>
+      </header>
+
+      <nav class="tabs" role="tablist" aria-label="Settings categories">
+        <button class="tab" id="courseTab" type="button" role="tab" data-tab="course" aria-selected="false" aria-controls="course">
+          Course backup
+        </button>
+        <button class="tab active" id="additionalTab" type="button" role="tab" data-tab="additional" aria-selected="true" aria-controls="additional">
+          Preferences
+        </button>
+      </nav>
+
+      <section id="course" class="tab-content" role="tabpanel" aria-labelledby="courseTab" aria-hidden="true">
+        <section class="settings-section" aria-labelledby="backupHeading">
+          <h2 id="backupHeading">Course backup</h2>
+          <p class="section-description">Choose how course materials are downloaded.</p>
+
+          <div class="setting-row">
+            <label for="concurrency">Concurrent downloads</label>
+            <input type="number" id="concurrency" min="1" max="10" value="5" />
+          </div>
+
+          <div class="setting-row">
+            <label for="quality">Video quality</label>
+            <select id="quality">
+              <option value="720p">720p</option>
+              <option value="540p">540p</option>
+              <option value="360p">360p</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="subtitle">Subtitle language</label>
+            <select id="subtitle"></select>
+          </div>
+        </section>
+
+        <button class="save-button" id="saveBtn" type="button">Save settings</button>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section id="additional" class="tab-content active" role="tabpanel" aria-labelledby="additionalTab" aria-hidden="false">
+        <section class="settings-section" aria-labelledby="speechHeading">
+          <h2 id="speechHeading">Speech</h2>
+          <label class="setting-item" for="speechToggle">
+            <input type="checkbox" id="speechToggle" />
+            <span>Enable speech guide</span>
+          </label>
+        </section>
+
+        <section class="settings-section" aria-labelledby="automationHeading">
+          <h2 id="automationHeading">Automation</h2>
+          <label class="setting-item" for="attemptAllQuizToggle">
+            <input type="checkbox" id="attemptAllQuizToggle" />
+            <span>Attempt all quizzes</span>
+          </label>
+          <label class="setting-item" for="autoQuizToggle">
+            <input type="checkbox" id="autoQuizToggle" />
+            <span>Auto quiz attempt</span>
+          </label>
+          <label class="setting-item" for="autoSubmitQuizToggle">
+            <input type="checkbox" id="autoSubmitQuizToggle" />
+            <span>Auto submit quiz</span>
+          </label>
+          <label class="setting-item" for="autoPopupToggle">
+            <input type="checkbox" id="autoPopupToggle" />
+            <span>Show popup on expiry</span>
+          </label>
+        </section>
+
+        <button class="save-button" id="saveAdditionalBtn" type="button">Save preferences</button>
+        <div class="status" id="additionalStatus" role="status" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="scripts/navigation-guard.js"></script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/settings-ui.js"></script>
+  </body>
+</html>

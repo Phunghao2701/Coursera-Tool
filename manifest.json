@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Coursera Tools",
+  "version": "3.6.10",
+  "version_name": "Release Version",
+  "description": "Quick tools for Coursera course materials, activities, and course backup.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "commands",
+    "downloads"
+  ],
+  "background": {
+    "service_worker": "/dist/scripts/background.js"
+  },
+  "icons": {
+    "16": "dist/assets/coursera-tools-16.png",
+    "32": "dist/assets/coursera-tools-32.png",
+    "48": "dist/assets/coursera-tools-48.png",
+    "128": "dist/assets/coursera-tools-128.png"
+  },
+  "action": {
+    "default_title": "Coursera Tools",
+    "default_popup": "dist/popup.html"
+  },
+  "options_page": "dist/settings.html",
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "matches": ["*://*.coursera.org/*"],
+      "js": ["dist/scripts/navigation-guard.js", "dist/scripts/content.js", "dist/scripts/xyz.js"],
+      "css": ["dist/ui/content.css"]
+    }
+  ],
+  "commands": {
+    "open_popup_1": {
+      "suggested_key": {
+        "default": "Alt+B",
+        "mac": "Command+B"
+      },
+      "description": "Open the Coursera Tools popup with Alt+B"
+    },
+    "open_popup_2": {
+      "suggested_key": {
+        "default": "Alt+W",
+        "mac": "Command+W"
+      },
+      "description": "Open the Coursera Tools popup with Alt+W"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/scripts/rdr.js"],
+      "matches": ["*://*.coursera.org/*"]
+    }
+  ],
+  "host_permissions": ["*://*.coursera.org/*"]
+}

@@ -1,0 +1,87 @@
+{
+  "colors": {
+    "coursera-blue": "#0056d2",
+    "page-fog": "#f5f7fa",
+    "paper-white": "#ffffff",
+    "ink": "#202b38",
+    "muted-ink": "#566476",
+    "disabled-ink": "#778497",
+    "rule": "#dfe5ec",
+    "soft-rule": "#edf1f5",
+    "blue-wash": "#eef5ff",
+    "blue-pressed": "#e3efff",
+    "scrollbar-thumb": "#c5cfdb"
+  },
+  "typography": {
+    "title": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "fontSize": "17px",
+      "fontWeight": 650,
+      "lineHeight": 1.25,
+      "letterSpacing": "-0.02em"
+    },
+    "body": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "fontSize": "13px",
+      "fontWeight": 550,
+      "lineHeight": 1.35
+    },
+    "supporting": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "fontSize": "12px",
+      "fontWeight": 400,
+      "lineHeight": 1.4
+    },
+    "tooltip": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "fontSize": "11px",
+      "fontWeight": 400,
+      "lineHeight": 1.4
+    },
+    "micro": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "fontSize": "9px",
+      "fontWeight": 650,
+      "lineHeight": 1.2
+    }
+  },
+  "spacing": {
+    "hairline": "2px",
+    "compact": "4px",
+    "row-inset": "8px",
+    "row-vertical": "9px",
+    "popup-inset": "14px",
+    "content-gap": "10px",
+    "tooltip-inset": "10px"
+  },
+  "rounded": {
+    "row": "5px",
+    "control": "7px",
+    "panel": "9px"
+  },
+  "components": {
+    "action-row": {
+      "backgroundColor": "{colors.paper-white}",
+      "textColor": "{colors.ink}",
+      "typography": "{typography.body}",
+      "rounded": "{rounded.row}",
+      "padding": "9px 8px",
+      "height": "40px"
+    },
+    "action-row-hover": {
+      "backgroundColor": "{colors.blue-wash}",
+      "textColor": "{colors.coursera-blue}"
+    },
+    "settings-control": {
+      "backgroundColor": "{colors.page-fog}",
+      "textColor": "{colors.muted-ink}",
+      "rounded": "{rounded.control}",
+      "size": "34px"
+    }
+  },
+  "effects": {
+    "action-transition": "140ms ease",
+    "focus-ring": "2px solid #0056d2",
+    "tooltip-shadow": "0 5px 16px rgba(26, 39, 55, 0.12)"
+  }
+}
