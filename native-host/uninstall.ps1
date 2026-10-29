@@ -9,6 +9,7 @@ $ErrorActionPreference = 'Stop'
 $hostName = 'com.coursera.tools.chatgpt'
 $appRoot = Join-Path $env:LOCALAPPDATA 'CourseraTools'
 $hostDirectory = Join-Path $appRoot 'NativeHost'
+$hostExecutable = Join-Path $hostDirectory 'CourseraToolsNativeHost.exe'
 
 $registryPaths = @()
 if ($Browser -eq 'Edge' -or $Browser -eq 'Both') {
@@ -31,7 +32,33 @@ $allRegistryPaths = @(
 $remainingRegistrations = @($allRegistryPaths | Where-Object { Test-Path -LiteralPath $_ })
 
 if ($remainingRegistrations.Count -eq 0 -and (Test-Path -LiteralPath $hostDirectory)) {
-    Remove-Item -LiteralPath $hostDirectory -Recurse -Force
+    if (Test-Path -LiteralPath $hostExecutable -PathType Leaf) {
+        $normalizedHostExecutable = [System.IO.Path]::GetFullPath($hostExecutable)
+        $runningHosts = @(Get-CimInstance -ClassName Win32_Process -Filter "Name='CourseraToolsNativeHost.exe'" -ErrorAction SilentlyContinue | Where-Object {
+            $_.ExecutablePath -and [System.String]::Equals(
+                [System.IO.Path]::GetFullPath($_.ExecutablePath),
+                $normalizedHostExecutable,
+                [System.StringComparison]::OrdinalIgnoreCase
+            )
+        })
+
+        foreach ($runningHost in $runningHosts) {
+            try {
+                Stop-Process -Id $runningHost.ProcessId -Force -ErrorAction Stop
+                Wait-Process -Id $runningHost.ProcessId -Timeout 5 -ErrorAction SilentlyContinue
+            }
+            catch {
+                throw "Could not stop the Coursera Tools helper process. Close Edge and Chrome, then retry. $($_.Exception.Message)"
+            }
+        }
+    }
+
+    try {
+        Remove-Item -LiteralPath $hostDirectory -Recurse -Force -ErrorAction Stop
+    }
+    catch {
+        throw "Could not remove the native helper files. Close Edge and Chrome, then run the uninstall command again. $($_.Exception.Message)"
+    }
 } elseif ($remainingRegistrations.Count -gt 0) {
     Write-Output 'Helper files were kept because another browser is still registered.'
 }
