@@ -1,6 +1,6 @@
 param(
     [ValidateSet('Edge', 'Chrome', 'Both')]
-    [string]$Browser = 'Edge',
+    [string]$Browser = 'Both',
 
     [switch]$RemoveSavedCredentials
 )
@@ -24,8 +24,16 @@ foreach ($registryPath in $registryPaths) {
     }
 }
 
-if (Test-Path -LiteralPath $hostDirectory) {
+$allRegistryPaths = @(
+    "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\$hostName",
+    "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$hostName"
+)
+$remainingRegistrations = @($allRegistryPaths | Where-Object { Test-Path -LiteralPath $_ })
+
+if ($remainingRegistrations.Count -eq 0 -and (Test-Path -LiteralPath $hostDirectory)) {
     Remove-Item -LiteralPath $hostDirectory -Recurse -Force
+} elseif ($remainingRegistrations.Count -gt 0) {
+    Write-Output 'Helper files were kept because another browser is still registered.'
 }
 
 if ($RemoveSavedCredentials) {

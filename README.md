@@ -49,6 +49,14 @@ Use `--browser Chrome` for Chrome or `--browser Both` for both browsers. The ins
 
 If Node.js/npm is not installed, the Edge setup remains available by double-clicking `native-host/Install-CourseraTools-ChatGPT.cmd`.
 
+To remove the helper registrations from both Edge and Chrome, run:
+
+```powershell
+npx --yes --package=./native-host -- coursera-tools-chatgpt-helper uninstall
+```
+
+Use `--browser Edge` or `--browser Chrome` to remove only one browser. Saved ChatGPT credentials are kept by default; add `--remove-saved-credentials` to delete their local file too.
+
 ## How to use
 
 1. Open your Coursera course.

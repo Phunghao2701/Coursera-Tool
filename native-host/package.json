@@ -9,6 +9,7 @@
   "files": [
     "cli.js",
     "install.ps1",
+    "uninstall.ps1",
     "CourseraToolsNativeHost.cs"
   ],
   "os": ["win32"]
