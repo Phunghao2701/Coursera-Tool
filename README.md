@@ -39,13 +39,13 @@ Using this extension, complete Coursera courses within seconds. It can be used f
 
 ### ChatGPT helper setup (once per PC)
 
-With Node.js/npm installed, run this from the repository folder:
+With Node.js/npm installed, run this from the folder containing `manifest.json`:
 
 ```powershell
 npx --yes --package=./native-host -- coursera-tools-chatgpt-helper --browser Edge
 ```
 
-Use `--browser Chrome` for Chrome or `--browser Both` for both browsers. The installer detects the Coursera Tools extension ID from the selected browser profile when possible; if it finds multiple copies or cannot detect one, it asks for the ID shown at the browser's extensions page. It registers the native helper for the current Windows account and does not require administrator access. After setup, the browser starts the helper automatically when Quiz AI connects. Reload Coursera Tools, then select **Continue with ChatGPT** in the popup. Run setup once per Windows account and computer.
+Use `--browser Chrome` for Chrome or `--browser Both` for both browsers. The installer detects the Coursera Tools extension ID from the selected browser profile by its installed folder or name; if it finds multiple copies or the extension is not installed in that browser profile, it asks for the ID shown at the browser's extensions page. It registers the native helper for the current Windows account and does not require administrator access. After setup, the browser starts the helper automatically when Quiz AI connects. Reload Coursera Tools, then select **Continue with ChatGPT** in the popup. Run setup once per Windows account and computer.
 
 If Node.js/npm is not installed, the Edge setup remains available by double-clicking `native-host/Install-CourseraTools-ChatGPT.cmd`.
 

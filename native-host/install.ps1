@@ -2,7 +2,9 @@ param(
     [string[]]$ExtensionId = @(),
 
     [ValidateSet('Edge', 'Chrome', 'Both')]
-    [string]$Browser = 'Edge'
+    [string]$Browser = 'Edge',
+
+    [string]$ExtensionPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,6 +15,16 @@ $hostDirectory = Join-Path $appRoot 'NativeHost'
 $hostPath = Join-Path $hostDirectory 'CourseraToolsNativeHost.exe'
 $manifestPath = Join-Path $hostDirectory ($hostName + '.json')
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..')).TrimEnd('\')
+$extensionPaths = @($repoRoot)
+if ($ExtensionPath) {
+    try {
+        $extensionPaths += [System.IO.Path]::GetFullPath($ExtensionPath).TrimEnd('\')
+    }
+    catch {
+        throw "The extension path is invalid: $ExtensionPath"
+    }
+}
+$extensionPaths = @($extensionPaths | Sort-Object -Unique)
 
 if (-not $ExtensionId -or $ExtensionId.Count -eq 0) {
     $profileRoots = @()
@@ -34,40 +46,50 @@ if (-not $ExtensionId -or $ExtensionId.Count -eq 0) {
         if (-not (Test-Path -LiteralPath $profileRoot.Path -PathType Container)) { continue }
         $profiles = Get-ChildItem -LiteralPath $profileRoot.Path -Directory -ErrorAction SilentlyContinue
         foreach ($profile in $profiles) {
-            $preferencesPath = Join-Path $profile.FullName 'Preferences'
-            if (-not (Test-Path -LiteralPath $preferencesPath -PathType Leaf)) { continue }
+            foreach ($preferencesFile in @('Preferences', 'Secure Preferences')) {
+                $preferencesPath = Join-Path $profile.FullName $preferencesFile
+                if (-not (Test-Path -LiteralPath $preferencesPath -PathType Leaf -ErrorAction SilentlyContinue)) { continue }
 
-            try {
-                $preferences = Get-Content -LiteralPath $preferencesPath -Raw | ConvertFrom-Json
-                $settings = $preferences.extensions.settings
-                if ($null -eq $settings) { continue }
-                foreach ($entry in $settings.PSObject.Properties) {
-                    if ($entry.Name -notmatch '^[a-p]{32}$') { continue }
-                    $name = [string]$entry.Value.manifest.name
-                    $extensionPath = [string]$entry.Value.path
-                    $sameFolder = $false
-                    if ($extensionPath) {
-                        try {
-                            $sameFolder = [System.String]::Equals(([System.IO.Path]::GetFullPath($extensionPath).TrimEnd('\')), $repoRoot, [System.StringComparison]::OrdinalIgnoreCase)
+                try {
+                    $preferences = Get-Content -LiteralPath $preferencesPath -Raw | ConvertFrom-Json
+                    $settings = $preferences.extensions.settings
+                    if ($null -eq $settings) { continue }
+                    foreach ($entry in $settings.PSObject.Properties) {
+                        if ($entry.Name -notmatch '^[a-p]{32}$') { continue }
+                        $name = [string]$entry.Value.manifest.name
+                        $installedPath = [string]$entry.Value.path
+                        $sameFolder = $false
+                        if ($installedPath) {
+                            try {
+                                $normalizedInstalledPath = [System.IO.Path]::GetFullPath($installedPath).TrimEnd('\')
+                                $sameFolder = @($extensionPaths | Where-Object { [System.String]::Equals($_, $normalizedInstalledPath, [System.StringComparison]::OrdinalIgnoreCase) }).Count -gt 0
+                            }
+                            catch { }
                         }
-                        catch { }
-                    }
-                    if (-not $sameFolder -and $name -notin @('Coursera Tools', 'Coursera Automation Extension')) { continue }
-                    $detectedExtensions += [pscustomobject]@{
-                        ExtensionId = $entry.Name
-                        Browser = $profileRoot.Browser
-                        Profile = $profile.Name
-                        Path = $extensionPath
+                        if (-not $sameFolder -and $name -notin @('Coursera Tools', 'Coursera Automation Extension')) { continue }
+                        $detectedExtensions += [pscustomobject]@{
+                            ExtensionId = $entry.Name
+                            Browser = $profileRoot.Browser
+                            Profile = $profile.Name
+                            Path = $installedPath
+                        }
                     }
                 }
-            }
-            catch {
-                # Ignore profiles with unreadable or malformed preferences.
+                catch {
+                    # Ignore profiles with unreadable or malformed preferences.
+                }
             }
         }
     }
 
-    $sameFolderExtensions = @($detectedExtensions | Where-Object { $_.Path -and [System.String]::Equals($_.Path.TrimEnd('\'), $repoRoot, [System.StringComparison]::OrdinalIgnoreCase) })
+    $sameFolderExtensions = @($detectedExtensions | Where-Object {
+        if (-not $_.Path) { return $false }
+        try {
+            $normalizedInstalledPath = [System.IO.Path]::GetFullPath($_.Path).TrimEnd('\')
+            return @($extensionPaths | Where-Object { [System.String]::Equals($_, $normalizedInstalledPath, [System.StringComparison]::OrdinalIgnoreCase) }).Count -gt 0
+        }
+        catch { return $false }
+    })
     $candidates = if ($sameFolderExtensions.Count -gt 0) { $sameFolderExtensions } else { $detectedExtensions }
     $detectedIds = @($candidates.ExtensionId | Sort-Object -Unique)
 

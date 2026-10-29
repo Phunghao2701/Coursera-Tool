@@ -47,6 +47,7 @@ if (process.platform !== 'win32') {
       '-ExecutionPolicy', 'Bypass',
       '-File', installer,
       '-Browser', browser,
+      '-ExtensionPath', process.cwd(),
     ];
     if (extensionIds.length) powershellArgs.push('-ExtensionId', ...extensionIds);
 
