@@ -15,17 +15,17 @@ Using this extension, complete Coursera courses within seconds. It can be used f
 
 ## Features Status
 
-| Feature                              | Status     | Notes |
-| ------------------------------------ | ---------- | ----- |
-| Complete quizzes                     | 🟢 Working |       |
-| Complete lectures                    | 🟢 Working |       |
-| Complete reading materials           | 🟢 Working |       |
-| Complete ungraded plugins (dialogue) | 🟢 Working |       |
-| Complete discussions                 | 🟢 Working |       |
-| Shareable link                       | 🟢 Working |       |
-| Quiz automation                      | 🟢 Working |       |
-| Course Backup                        | 🟢 Working |       |
-| Locking browser                      | 🟢 Working |       |
+| Feature                              | Status     | Notes                                                                           |
+| ------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
+| Complete quizzes                     | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw)                                      |
+| Complete lectures                    | 🟢 Working |                                                                                 |
+| Complete reading materials           | 🟢 Working |                                                                                 |
+| Complete ungraded plugins (dialogue) | 🟢 Working |                                                                                 |
+| Complete discussions                 | 🟢 Working |                                                                                 |
+| Shareable link                       | 🟢 Working |                                                                                 |
+| Quiz automation                      | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw) Feedback-based accuracy improvement. |
+| Course Backup                        | 🟢 Working | [Watch Demo](https://youtu.be/KpmoToGLD-I)                                      |
+| Locking browser                      | 🟢 Working | [Watch Demo](https://youtu.be/pd5HfVeC4AM)                                      |
 
 ## Installation
 
