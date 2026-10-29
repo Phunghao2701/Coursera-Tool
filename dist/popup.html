@@ -20,11 +20,24 @@
         </button>
         <p class="popup-subtitle">Actions for your current course</p>
 
+        <section id="chatgptPanel" class="chatgpt-panel" aria-label="ChatGPT quiz assistant">
+          <div class="chatgpt-panel-heading">
+            <strong>Quiz assistant</strong>
+            <span id="chatgptConnectionState" class="chatgpt-connection-state" role="status">Checking connection…</span>
+          </div>
+          <p class="chatgpt-disclosure">Quiz text and choices are sent to OpenAI only when you request help. <a href="privacy.html" target="_blank" rel="noopener">Privacy details</a></p>
+          <button id="chatgptConnectBtn" class="chatgpt-action" type="button">Continue with ChatGPT</button>
+          <button id="chatgptQuizBtn" class="chatgpt-action chatgpt-action-primary" type="button" disabled>Fill quiz answers</button>
+          <button id="chatgptDisconnectBtn" class="chatgpt-disconnect hidden" type="button">Disconnect ChatGPT</button>
+          <p id="chatgptMessage" class="chatgpt-message" role="status" aria-live="polite"></p>
+        </section>
+
         <div id="courseraModelGrid" role="group" aria-label="Course actions"></div>
 
       </div>
 
 
     </div>
+    <script src="scripts/chatgpt-popup.js"></script>
   </body>
 </html>

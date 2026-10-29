@@ -32,6 +32,10 @@
 
     if (target.protocol !== "https:" && target.protocol !== "http:") return false;
     const hostname = target.hostname.toLowerCase();
+    const currentProtocol = root.location?.protocol;
+    if (hostname === "auth.openai.com" && (currentProtocol === "chrome-extension:" || currentProtocol === "edge-extension:")) {
+      return true;
+    }
     return hostname === "coursera.org" || hostname.endsWith(".coursera.org");
   };
 

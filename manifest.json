@@ -1,19 +1,20 @@
 {
   "manifest_version": 3,
   "name": "Coursera Tools",
-  "version": "3.6.10",
+  "version": "3.7.0",
   "version_name": "Release Version",
-  "description": "Quick tools for Coursera course materials, activities, and course backup.",
+  "description": "Quick tools for Coursera courses with optional ChatGPT quiz assistance.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
     "tabs",
     "commands",
-    "downloads"
+    "downloads",
+    "nativeMessaging"
   ],
   "background": {
-    "service_worker": "/dist/scripts/background.js"
+    "service_worker": "/dist/scripts/background-entry.js"
   },
   "icons": {
     "16": "dist/assets/coursera-tools-16.png",
@@ -30,7 +31,7 @@
     {
       "run_at": "document_start",
       "matches": ["*://*.coursera.org/*"],
-      "js": ["dist/scripts/navigation-guard.js", "dist/scripts/content.js", "dist/scripts/xyz.js"],
+      "js": ["dist/scripts/navigation-guard.js", "dist/scripts/content.js", "dist/scripts/xyz.js", "dist/scripts/chatgpt-quiz-content.js"],
       "css": ["dist/ui/content.css"]
     }
   ],

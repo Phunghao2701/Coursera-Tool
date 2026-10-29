@@ -1,43 +1,31 @@
 # Coursera Tools
 
-![Version](https://img.shields.io/badge/version-3.6.10-blue)
-![License](https://img.shields.io/badge/license-BSL--1.1-blue)
-![Platform](https://img.shields.io/badge/platform-Chrome-blue)
-
 Using this extension, complete Coursera courses within seconds. It can be used for free to complete lectures, dialogue, reading materials, ungraded plugins, discussions, shareable link, Locking browser and course backup. All features in this version are available without paid activation.
 
 `Disclaimer:` Quiz Automation provides AI-generated answers, which may not always be accurate.
 
 ## Table of Contents
 
-- [Demo](#demo)
 - [Features](#features-status)
 - [Installation](#installation)
 - [How to use](#how-to-use)
 - [Shareable Link](#shareable-link)
 - [Quiz Automation](#quiz-automation)
 - [Keyboard Shortcuts](#keyboard-shortcuts)
-- [License](#license)
-
-## Demo
-
-<div align="center">
-  <a href="https://youtu.be/jKkWUVLRLnE"><img src="https://i.ytimg.com/vi/jKkWUVLRLnE/hqdefault.jpg" alt="Coursera Tools"></a>
-</div>
 
 ## Features Status
 
-| Feature                              | Status     | Notes                                                                           |
-| ------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
-| Complete quizzes                     | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw)                                      |
-| Complete lectures                    | 🟢 Working |                                                                                 |
-| Complete reading materials           | 🟢 Working |                                                                                 |
-| Complete ungraded plugins (dialogue) | 🟢 Working |                                                                                 |
-| Complete discussions                 | 🟢 Working |                                                                                 |
-| Shareable link                       | 🟢 Working |                                                                                 |
-| Quiz automation                      | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw) Feedback-based accuracy improvement. |
-| Course Backup                        | 🟢 Working | [Watch Demo](https://youtu.be/KpmoToGLD-I)                                      |
-| Locking browser                      | 🟢 Working | [Watch Demo](https://youtu.be/pd5HfVeC4AM)                                      |
+| Feature                              | Status     | Notes |
+| ------------------------------------ | ---------- | ----- |
+| Complete quizzes                     | 🟢 Working |       |
+| Complete lectures                    | 🟢 Working |       |
+| Complete reading materials           | 🟢 Working |       |
+| Complete ungraded plugins (dialogue) | 🟢 Working |       |
+| Complete discussions                 | 🟢 Working |       |
+| Shareable link                       | 🟢 Working |       |
+| Quiz automation                      | 🟢 Working |       |
+| Course Backup                        | 🟢 Working |       |
+| Locking browser                      | 🟢 Working |       |
 
 ## Installation
 
@@ -79,10 +67,6 @@ Extension will automatically get the solutions and mark the correct options.
 
 - `Alt + W` or `Alt + B`: Toggle the Extension
 - `Alt + Z` or `Ctrl + Shift + Z`: Refresh the answers or Navigate to the next question(mark as correct)
-
-## License
-
-This project is licensed under the Business Source License 1.1 (BSL-1.1) - see the [LICENSE](LICENSE) file for details.
 
 ---
 

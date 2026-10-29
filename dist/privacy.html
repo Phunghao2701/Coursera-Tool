@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy · Coursera Tools</title>
+    <link rel="stylesheet" href="ui/popup.css" />
+    <style>
+      body { width: min(720px, calc(100vw - 32px)); margin: 32px auto; padding: 24px; }
+      h1 { margin-top: 0; font-size: 24px; }
+      h2 { margin: 24px 0 8px; font-size: 16px; }
+      p, li { color: var(--muted); font-size: 14px; line-height: 1.65; }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Coursera Tools privacy</h1>
+      <p>This optional feature connects to ChatGPT and sends quiz text to OpenAI when you click <strong>Fill quiz answers</strong>.</p>
+
+      <h2>Quiz content</h2>
+      <p>For Quiz AI, the extension reads visible multiple-choice question text and answer choices from the current Coursera page. It sends that extracted text to OpenAI's Responses API using the ChatGPT plan you authorized. It does not send Coursera cookies, passwords, or the rest of the page.</p>
+      <p>Each request starts when you click the button. The extension fills returned choices in the page and does not submit the quiz.</p>
+
+      <h2>ChatGPT connection</h2>
+      <p>Sign in with ChatGPT is handled through OpenAI's supported OAuth flow. The local Windows helper completes the loopback callback, refreshes credentials, and sends inference requests directly to OpenAI. It stores the ChatGPT OAuth tokens on this computer protected with Windows DPAPI. Tokens are not sent to a Coursera Tools server, exposed to Coursera page scripts, or included in extension messages.</p>
+      <p>Responses requests use <code>store: false</code> and <code>stream: true</code>. OpenAI processes requests under the terms and privacy settings of your ChatGPT account. ChatGPT plan eligibility and usage limits apply.</p>
+
+      <h2>Disconnecting and removing data</h2>
+      <p>Choose <strong>Disconnect ChatGPT</strong> in the extension popup to stop an active quiz request, attempt to revoke the refresh token with OpenAI, and delete the local credentials. If remote revocation cannot be confirmed, manage the connection in ChatGPT settings. Removing the native helper does not delete saved credentials unless you use its installer option to remove them.</p>
+    </main>
+  </body>
+</html>

@@ -5,6 +5,10 @@ node_modules/
 coverage/
 .nyc_output/
 web-ext-artifacts/
+native-host/bin/
+native-host/obj/
+native-host/*.exe
+native-host/*.pdb
 
 # Local environment and secrets
 .env
@@ -32,4 +36,5 @@ Desktop.ini
 .idea/
 *.swp
 *.swo
-LICENSE
+DESIGN.md
+CONTRIBUTING.md

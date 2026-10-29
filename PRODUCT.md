@@ -24,7 +24,9 @@ The user opens the extension popup while a Coursera course is active, selects an
 - Skip Video+ is being removed from the available popup actions at the user's request.
 - Extension actions must not send users to unrelated external pages.
 - The user does not want automatic Coursera account linking, usage counters, or expiry dates in the popup.
-- The user requested ChatGPT sign-in for Quiz assistance. This remains unimplemented until OpenAI enables the extension as a participating app; a ChatGPT Plus account alone does not provide third-party OAuth access.
+- The popup includes an optional ChatGPT quiz assistant. It uses the local Sign in with ChatGPT flow and a native helper for the loopback OAuth callback; the helper stores tokens locally with Windows DPAPI.
+- Quiz questions and choices are sent to OpenAI when the user clicks Fill quiz answers; the popup displays this disclosure. The assistant fills answers but does not submit the Coursera quiz.
+- The current quiz assistant supports visible multiple-choice and checkbox questions. ChatGPT plan eligibility and usage limits apply; no OpenAI API key or ChatGPT cookie is collected.
 - The bundled action runner is obfuscated and sends one-way messages, so the popup cannot confirm when a course action has finished. Do not show a completion or refresh alert until the runner exposes a reliable completion signal.
 
 ## Brand Commitments
