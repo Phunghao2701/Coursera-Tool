@@ -13,7 +13,7 @@
 
   function friendlyNativeHostError(detail) {
     if (/specified native messaging host not found|native messaging host not found/i.test(String(detail || ""))) {
-      return "ChatGPT helper is not registered for this browser. Run native-host/install.ps1 in PowerShell under the same Windows account as Edge, using this extension's ID, then reload Coursera Tools.";
+      return "ChatGPT helper needs one-time setup on this PC. Double-click native-host/Install-CourseraTools-ChatGPT.cmd from the extension folder, then reload Coursera Tools. Edge starts the helper automatically after setup.";
     }
     return detail || "ChatGPT helper disconnected.";
   }

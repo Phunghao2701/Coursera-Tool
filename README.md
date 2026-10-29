@@ -15,17 +15,17 @@ Using this extension, complete Coursera courses within seconds. It can be used f
 
 ## Features Status
 
-| Feature                              | Status     | Notes                                                                           |
-| ------------------------------------ | ---------- | ------------------------------------------------------------------------------- |
-| Complete quizzes                     | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw)                                      |
-| Complete lectures                    | 🟢 Working |                                                                                 |
-| Complete reading materials           | 🟢 Working |                                                                                 |
-| Complete ungraded plugins (dialogue) | 🟢 Working |                                                                                 |
-| Complete discussions                 | 🟢 Working |                                                                                 |
-| Shareable link                       | 🟢 Working |                                                                                 |
-| Quiz automation                      | 🟢 Working | [Watch Demo](https://youtu.be/TrJqspKdKlw) Feedback-based accuracy improvement. |
-| Course Backup                        | 🟢 Working | [Watch Demo](https://youtu.be/KpmoToGLD-I)                                      |
-| Locking browser                      | 🟢 Working | [Watch Demo](https://youtu.be/pd5HfVeC4AM)                                      |
+| Feature                              | Status     | Notes |
+| ------------------------------------ | ---------- | ----- |
+| Complete quizzes                     | 🟢 Working |       |
+| Complete lectures                    | 🟢 Working |       |
+| Complete reading materials           | 🟢 Working |       |
+| Complete ungraded plugins (dialogue) | 🟢 Working |       |
+| Complete discussions                 | 🟢 Working |       |
+| Shareable link                       | 🟢 Working |       |
+| Quiz automation                      | 🟢 Working |       |
+| Course Backup                        | 🟢 Working |       |
+| Locking browser                      | 🟢 Working |       |
 
 ## Installation
 
@@ -36,6 +36,18 @@ Using this extension, complete Coursera courses within seconds. It can be used f
 5. Click on `Load unpacked`.
 6. Select the downloaded folder.
 7. The extension will be added to the browser.
+
+### ChatGPT helper setup (once per PC)
+
+With Node.js/npm installed, run this from the repository folder:
+
+```powershell
+npx --yes --package=./native-host -- coursera-tools-chatgpt-helper --browser Edge
+```
+
+Use `--browser Chrome` for Chrome or `--browser Both` for both browsers. The installer detects the Coursera Tools extension ID from the selected browser profile when possible; if it finds multiple copies or cannot detect one, it asks for the ID shown at the browser's extensions page. It registers the native helper for the current Windows account and does not require administrator access. After setup, the browser starts the helper automatically when Quiz AI connects. Reload Coursera Tools, then select **Continue with ChatGPT** in the popup. Run setup once per Windows account and computer.
+
+If Node.js/npm is not installed, the Edge setup remains available by double-clicking `native-host/Install-CourseraTools-ChatGPT.cmd`.
 
 ## How to use
 

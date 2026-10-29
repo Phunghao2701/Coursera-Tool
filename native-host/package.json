@@ -1,0 +1,15 @@
+{
+  "name": "coursera-tools-chatgpt-helper",
+  "version": "3.7.0",
+  "private": true,
+  "description": "One-time Windows setup for the Coursera Tools ChatGPT native helper",
+  "bin": {
+    "coursera-tools-chatgpt-helper": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "install.ps1",
+    "CourseraToolsNativeHost.cs"
+  ],
+  "os": ["win32"]
+}
