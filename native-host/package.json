@@ -8,6 +8,7 @@
   },
   "files": [
     "cli.js",
+    "build.ps1",
     "install.ps1",
     "uninstall.ps1",
     "CourseraToolsNativeHost.cs"

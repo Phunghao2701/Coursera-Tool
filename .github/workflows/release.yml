@@ -1,0 +1,109 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-2022
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v7
+
+      - name: Validate tag and build native helper
+        id: metadata
+        shell: pwsh
+        run: |
+          $manifest = Get-Content -LiteralPath 'manifest.json' -Raw | ConvertFrom-Json
+          $version = [string]$manifest.version
+          $expectedTag = "v$version"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
+            throw "Tag $env:GITHUB_REF_NAME must match manifest version $expectedTag."
+          }
+
+          & '.\native-host\build.ps1'
+          Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "version=$version" -Encoding utf8
+
+      - name: Package the user release
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          $stagingRoot = Join-Path $env:RUNNER_TEMP "coursera-tools-release-$env:GITHUB_RUN_ID"
+          $packageRoot = Join-Path $stagingRoot 'Coursera Tools'
+          $nativeHostRoot = Join-Path $packageRoot 'native-host'
+          $nativeHostBin = Join-Path $nativeHostRoot 'bin'
+          $assetPath = Join-Path $env:RUNNER_TEMP "Coursera-Tools-$env:RELEASE_VERSION.zip"
+
+          New-Item -ItemType Directory -Path $nativeHostBin -Force | Out-Null
+          Copy-Item -LiteralPath 'manifest.json' -Destination $packageRoot
+          Copy-Item -LiteralPath 'dist' -Destination $packageRoot -Recurse
+          Copy-Item -LiteralPath 'native-host\Install-CourseraTools-ChatGPT.cmd' -Destination $nativeHostRoot
+          Copy-Item -LiteralPath 'native-host\install.ps1' -Destination $nativeHostRoot
+          Copy-Item -LiteralPath 'native-host\uninstall.ps1' -Destination $nativeHostRoot
+          Copy-Item -LiteralPath 'native-host\bin\CourseraToolsNativeHost.exe' -Destination $nativeHostBin
+          Copy-Item -LiteralPath 'release\INSTALL.md' -Destination (Join-Path $packageRoot 'INSTALL.md')
+
+          Compress-Archive -Path (Join-Path $packageRoot '*') -DestinationPath $assetPath -CompressionLevel Optimal
+          Write-Output "Release package created: $assetPath"
+
+      - name: Create GitHub release and upload package
+        uses: actions/github-script@v9
+        env:
+          RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const tag = context.ref.replace(/^refs\/tags\//, '');
+            const assetPath = path.join(
+              process.env.RUNNER_TEMP,
+              `Coursera-Tools-${process.env.RELEASE_VERSION}.zip`
+            );
+            const assetName = path.basename(assetPath);
+            let release;
+
+            try {
+              const response = await github.rest.repos.getReleaseByTag({
+                ...context.repo,
+                tag,
+              });
+              release = response.data;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              const response = await github.rest.repos.createRelease({
+                ...context.repo,
+                tag_name: tag,
+                name: `Coursera Tools ${tag}`,
+                body: `Download ${assetName} under Assets. The archive includes INSTALL.md and the prebuilt Windows ChatGPT helper.`,
+                draft: false,
+                prerelease: false,
+              });
+              release = response.data;
+            }
+
+            for (const asset of release.assets.filter((item) => item.name === assetName)) {
+              await github.rest.repos.deleteReleaseAsset({
+                ...context.repo,
+                asset_id: asset.id,
+              });
+            }
+
+            const data = fs.readFileSync(assetPath);
+            await github.rest.repos.uploadReleaseAsset({
+              ...context.repo,
+              release_id: release.id,
+              name: assetName,
+              data,
+              headers: {
+                'content-type': 'application/zip',
+                'content-length': data.length,
+              },
+            });
+
+            core.info(`Published ${assetName} to ${tag}`);

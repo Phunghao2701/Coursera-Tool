@@ -9,7 +9,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $hostName = 'com.coursera.tools.chatgpt'
-$sourcePath = Join-Path $PSScriptRoot 'CourseraToolsNativeHost.cs'
+$buildScript = Join-Path $PSScriptRoot 'build.ps1'
+$bundledHostPath = Join-Path $PSScriptRoot 'bin\CourseraToolsNativeHost.exe'
 $appRoot = Join-Path $env:LOCALAPPDATA 'CourseraTools'
 $hostDirectory = Join-Path $appRoot 'NativeHost'
 $hostPath = Join-Path $hostDirectory 'CourseraToolsNativeHost.exe'
@@ -115,31 +116,21 @@ if ($ExtensionId.Count -eq 0 -or @($ExtensionId | Where-Object { $_ -notmatch '^
     throw 'Enter one or more valid 32-character extension IDs containing letters a through p.'
 }
 
-if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
-    throw "Native host source was not found: $sourcePath"
-}
-
-$compilerCandidates = @(
-    (Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'),
-    (Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe')
-)
-$compiler = $compilerCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-if (-not $compiler) {
-    throw 'The .NET Framework C# compiler was not found. Install the .NET Framework 4.x developer tools and run this installer again.'
-}
-
 New-Item -ItemType Directory -Path $hostDirectory -Force | Out-Null
-$compilerArguments = @(
-    '/nologo',
-    '/target:exe',
-    "/out:$hostPath",
-    '/reference:System.Web.Extensions.dll',
-    '/reference:System.Security.dll',
-    $sourcePath
-)
-& $compiler @compilerArguments
-if ($LASTEXITCODE -ne 0) {
-    throw "Native host compilation failed with exit code $LASTEXITCODE."
+if (Test-Path -LiteralPath $bundledHostPath -PathType Leaf) {
+    Copy-Item -LiteralPath $bundledHostPath -Destination $hostPath -Force
+    Write-Output 'Using the prebuilt native helper included in this release.'
+} else {
+    if (-not (Test-Path -LiteralPath $buildScript -PathType Leaf)) {
+        throw "Native host build script was not found: $buildScript"
+    }
+    try {
+        & $buildScript
+        Copy-Item -LiteralPath $bundledHostPath -Destination $hostPath -Force
+    }
+    catch {
+        throw "Could not build or install the native helper. Install the .NET Framework 4.x developer tools and retry. $($_.Exception.Message)"
+    }
 }
 
 $nativeManifest = [ordered]@{

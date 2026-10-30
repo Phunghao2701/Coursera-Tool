@@ -29,33 +29,39 @@ Using this extension, complete Coursera courses within seconds. It can be used f
 
 ## Installation
 
+### Install a release (no source checkout or Node.js)
+
+Download `Coursera-Tools-<version>.zip` from the [latest GitHub Release](https://github.com/Phunghao2701/Coursera-Tool/releases/latest) under **Assets**. Extract it to a permanent folder, open `edge://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
+
+For ChatGPT quiz help, double-click `native-host/Install-CourseraTools-ChatGPT.cmd` from the extracted folder once. The release includes a prebuilt helper, so end users do not need Node.js or npm. Chrome users can follow [`release/INSTALL.md`](release/INSTALL.md) for the Chrome-specific setup command.
+
+### Updates
+
+GitHub Releases do not automatically update an unpacked extension. Download the new release ZIP, replace the files in the same extracted folder, click **Reload** on the browser's extensions page, then refresh Coursera tabs. Ordinary extension updates do not require reinstalling the native helper.
+
+### Install from source (maintainers)
+
 1. Clone or download the repository.
-2. Open the Chrome browser.
-3. Go to `chrome://extensions/`.
-4. Enable `Developer mode`.
-5. Click on `Load unpacked`.
-6. Select the downloaded folder.
-7. The extension will be added to the browser.
-
-### ChatGPT helper setup (once per PC)
-
-With Node.js/npm installed, run this from the folder containing `manifest.json`:
+2. Open `edge://extensions` (or `chrome://extensions`), enable **Developer mode**, and choose **Load unpacked**.
+3. Select the repository folder containing `manifest.json`.
+4. To set up the ChatGPT helper from source with Node.js/npm, run this from the repository folder:
 
 ```powershell
 npx --yes --package=./native-host -- coursera-tools-chatgpt-helper --browser Edge
 ```
 
-Use `--browser Chrome` for Chrome or `--browser Both` for both browsers. The installer detects the Coursera Tools extension ID from the selected browser profile by its installed folder or name; if it finds multiple copies or the extension is not installed in that browser profile, it asks for the ID shown at the browser's extensions page. It registers the native helper for the current Windows account and does not require administrator access. After setup, the browser starts the helper automatically when Quiz AI connects. Reload Coursera Tools, then select **Continue with ChatGPT** in the popup. Run setup once per Windows account and computer.
+Use `--browser Chrome` or `--browser Both` as needed. The helper installer is also available at `native-host/Install-CourseraTools-ChatGPT.cmd` for Edge without Node.js.
 
-If Node.js/npm is not installed, the Edge setup remains available by double-clicking `native-host/Install-CourseraTools-ChatGPT.cmd`.
+### Publish a release (maintainers)
 
-To remove the helper registrations from both Edge and Chrome, run:
+Update `manifest.json`'s version, commit the change, and push a matching `v<version>` tag. For example, after setting the version to `3.7.1`:
 
 ```powershell
-npx --yes --package=./native-host -- coursera-tools-chatgpt-helper uninstall
+git tag v3.7.1
+git push origin v3.7.1
 ```
 
-Use `--browser Edge` or `--browser Chrome` to remove only one browser. Saved ChatGPT credentials are kept by default; add `--remove-saved-credentials` to delete their local file too.
+GitHub Actions validates the tag, builds the Windows helper, packages the user files, and publishes the ZIP to a GitHub Release. Users still download each new release manually and reload their unpacked extension.
 
 ## How to use
 
